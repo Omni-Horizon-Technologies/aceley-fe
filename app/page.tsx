@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { LottieMascot } from "@/app/components/lottie-mascot";
 import { SiteFooter } from "@/app/components/site-footer";
 import {
   BrandMark,
@@ -59,26 +60,31 @@ export default function Home() {
         </header>
 
         <div className="mx-auto max-w-6xl px-4 pb-14 pt-10 sm:px-6 sm:pb-16 lg:px-8 lg:pt-16">
-          <div className="max-w-3xl">
-            <p className="inline-flex rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-[#FB7185] ring-1 ring-white/15">
-              Notes to flashcards in under 30 seconds
-            </p>
-            <h1 className="mt-6 max-w-4xl text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-              Turn your notes into flashcards instantly
-            </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-white/78">
-              Create, study, and remember faster with a simple flashcard app
-              built for students.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <PrimaryButton href="/auth" className="bg-[#FB7185] hover:bg-white hover:text-[#312E81]">
-                <Icon name="spark" />
-                Get Started
-              </PrimaryButton>
-              <SecondaryButton href="/study" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-[#312E81]">
-                <Icon name="play" />
-                Try Demo
-              </SecondaryButton>
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
+            <div className="max-w-3xl">
+              <p className="inline-flex rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-[#FB7185] ring-1 ring-white/15">
+                Notes to flashcards in under 30 seconds
+              </p>
+              <h1 className="mt-6 max-w-4xl text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+                Turn your notes into flashcards instantly
+              </h1>
+              <p className="mt-5 max-w-2xl text-lg leading-8 text-white/78">
+                Create, study, and remember faster with a simple flashcard app
+                built for students.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <PrimaryButton href="/auth" className="bg-[#FB7185] hover:bg-white hover:text-[#312E81]">
+                  <Icon name="spark" />
+                  Get Started
+                </PrimaryButton>
+                <SecondaryButton href="/study" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-[#312E81]">
+                  <Icon name="play" />
+                  Try Demo
+                </SecondaryButton>
+              </div>
+            </div>
+            <div className="mx-auto w-full max-w-52 rounded-lg border border-white/15 bg-white/10 p-4 shadow-2xl shadow-[#1E1B4B]/25 sm:max-w-60 lg:mx-0">
+              <LottieMascot className="mx-auto aspect-square w-full" />
             </div>
           </div>
 
