@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { Deck, StudyCard } from "@/app/lib/data";
 
 type IconName =
+  | "arrowLeft"
   | "dashboard"
   | "create"
   | "profile"
@@ -33,6 +34,12 @@ export function Icon({
   className?: string;
 }) {
   const paths: Record<IconName, ReactNode> = {
+    arrowLeft: (
+      <>
+        <path d="M19 12H5" />
+        <path d="m12 19-7-7 7-7" />
+      </>
+    ),
     dashboard: (
       <>
         <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h3A1.5 1.5 0 0 1 10 5.5v3A1.5 1.5 0 0 1 8.5 10h-3A1.5 1.5 0 0 1 4 8.5v-3Z" />
@@ -397,6 +404,54 @@ export function TextArea({
         placeholder={placeholder}
       />
     </label>
+  );
+}
+
+export function DifficultySelector() {
+  const levels = [
+    {
+      description: "Short, direct cards for quick recall.",
+      label: "Easy",
+      value: "easy",
+    },
+    {
+      description: "A balanced mix for regular revision.",
+      label: "Medium",
+      value: "medium",
+    },
+    {
+      description: "More detailed prompts for exam practice.",
+      label: "Hard",
+      value: "hard",
+    },
+  ];
+
+  return (
+    <fieldset>
+      <legend className="text-sm font-semibold text-[#1E1B4B]">
+        Flashcard difficulty
+      </legend>
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        {levels.map((level) => (
+          <label
+            className="cursor-pointer rounded-lg border border-slate-200 bg-[#F8FAFC] p-4 transition has-[:checked]:border-[#312E81] has-[:checked]:bg-[#312E81]/10 has-[:checked]:ring-4 has-[:checked]:ring-[#312E81]/10"
+            key={level.value}
+          >
+            <input
+              className="sr-only"
+              defaultChecked={level.value === "medium"}
+              name="difficulty"
+              type="radio"
+              value={level.value}
+            />
+            <span className="text-sm font-black text-[#1E1B4B]">{level.label}</span>
+            <span className="mt-2 block text-sm leading-6 text-slate-600">
+              {level.description}
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { BackButton } from "@/app/components/back-button";
 import { AuthForm } from "@/app/components/auth-form";
 import { BrandMark, Icon, MockDashboardPreview } from "@/app/components/ui";
 
@@ -8,7 +9,13 @@ export default function AuthPage() {
       <div className="grid lg:min-h-screen lg:grid-cols-[1fr_0.92fr]">
         <section className="bg-gradient-to-br from-[#312E81] to-[#1E1B4B] px-4 py-5 text-white sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-3xl flex-col lg:h-full">
-            <BrandMark tone="dark" />
+            <div className="flex items-center gap-3">
+              <BackButton
+                className="border-white/15 bg-white/10 text-white hover:border-white/30 hover:text-[#FB7185]"
+                fallbackHref="/"
+              />
+              <BrandMark tone="dark" />
+            </div>
             <div className="flex flex-col py-8 lg:flex-1 lg:justify-center lg:py-12">
               <p className="inline-flex w-fit rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-[#FB7185] ring-1 ring-white/15">
                 Sign in and start studying

@@ -1,6 +1,7 @@
 import { AppLayout } from "@/app/components/app-layout";
 import {
   Flashcard,
+  DifficultySelector,
   Icon,
   InputField,
   PageHeader,
@@ -27,6 +28,9 @@ export default function CreateDeckPage() {
               <InputField label="Subject" placeholder="Biology" value="Biology" />
             </div>
             <div className="mt-5">
+              <DifficultySelector />
+            </div>
+            <div className="mt-5">
               <TextArea
                 label="Notes"
                 placeholder="Paste class notes here..."
@@ -48,7 +52,8 @@ export default function CreateDeckPage() {
               3 editable cards
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Review questions and answers before saving them to the deck.
+              Review questions and answers before saving them to the deck. This
+              preview uses medium difficulty.
             </p>
             <div className="mt-6 space-y-4">
               {flashcards.map((card, index) => (

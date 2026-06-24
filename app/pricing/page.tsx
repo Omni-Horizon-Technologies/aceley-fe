@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { BackButton } from "@/app/components/back-button";
 import {
   BrandMark,
   Icon,
@@ -208,7 +209,10 @@ export default function PricingPage() {
     <main className="min-h-screen bg-[#F8FAFC] text-[#1E1B4B]">
       <header className="border-b border-slate-200 bg-white/90 px-4 py-5 backdrop-blur sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-          <BrandMark />
+          <div className="flex items-center gap-3">
+            <BackButton className="h-10 w-10" fallbackHref="/" />
+            <BrandMark />
+          </div>
           <nav className="flex items-center gap-4" aria-label="Pricing navigation">
             <Link
               className="hidden text-sm font-bold text-slate-600 transition hover:text-[#312E81] sm:inline-flex"

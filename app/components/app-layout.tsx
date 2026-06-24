@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BackButton } from "@/app/components/back-button";
 import { BrandMark, cn, Icon } from "@/app/components/ui";
 import Link from "next/link";
 
@@ -24,8 +25,10 @@ export function Sidebar({ active }: { active: NavId }) {
           <Link
             aria-current={active === item.id ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold text-white/72 transition hover:bg-white/10 hover:text-white",
-              active === item.id && "bg-white text-[#312E81] shadow-sm hover:bg-white",
+              "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition",
+              active === item.id
+                ? "bg-white text-[#312E81] shadow-sm hover:bg-white"
+                : "text-white/72 hover:bg-white/10 hover:text-white",
             )}
             href={item.href}
             key={item.id}
@@ -50,7 +53,10 @@ export function Navbar({ active }: { active: NavId }) {
     <>
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <BrandMark />
+          <div className="flex items-center gap-3">
+            <BackButton className="h-10 w-10" />
+            <BrandMark />
+          </div>
           <Link
             className="rounded-lg bg-[#FB7185] px-4 py-2 text-sm font-bold text-white shadow-sm"
             href="/study"
@@ -68,8 +74,10 @@ export function Navbar({ active }: { active: NavId }) {
             <Link
               aria-current={active === item.id ? "page" : undefined}
               className={cn(
-                "flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-xs font-bold text-slate-500 transition hover:bg-[#F8FAFC]",
-                active === item.id && "bg-[#312E81] text-white hover:bg-[#312E81]",
+                "flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-xs font-bold transition",
+                active === item.id
+                  ? "bg-[#312E81] text-white hover:bg-[#312E81]"
+                  : "text-slate-500 hover:bg-[#F8FAFC]",
               )}
               href={item.href}
               key={item.id}
@@ -96,7 +104,12 @@ export function AppLayout({
       <Sidebar active={active} />
       <Navbar active={active} />
       <main className="px-4 py-8 pb-28 sm:px-6 lg:ml-72 lg:px-8 lg:py-10">
-        <div className="mx-auto max-w-6xl">{children}</div>
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-6 hidden lg:block">
+            <BackButton />
+          </div>
+          {children}
+        </div>
       </main>
     </div>
   );
