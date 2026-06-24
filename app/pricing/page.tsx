@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { BackButton } from "@/app/components/back-button";
+import { SiteFooter } from "@/app/components/site-footer";
 import {
   BrandMark,
   Icon,
@@ -268,6 +269,7 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

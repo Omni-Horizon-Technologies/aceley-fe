@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteFooter } from "@/app/components/site-footer";
 import {
   BrandMark,
   Icon,
@@ -98,6 +99,7 @@ export default function Home() {
           <SecondaryButton href="/pricing">View Pricing</SecondaryButton>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }
