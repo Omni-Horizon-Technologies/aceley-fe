@@ -202,8 +202,8 @@ export function PrimaryButton({
   type = "button",
 }: ButtonProps) {
   const styles = cn(
-    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#312E81] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#FACC15] hover:text-[#1E1B4B] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#312E81]/20",
-    disabled && "cursor-not-allowed opacity-60 hover:bg-[#312E81]",
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#FACC15] px-5 py-3 text-sm font-semibold text-[#1E1B4B] shadow-sm transition hover:bg-[#312E81] hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/25",
+    disabled && "cursor-not-allowed opacity-60 hover:bg-[#FACC15] hover:text-[#1E1B4B]",
     className,
   );
 

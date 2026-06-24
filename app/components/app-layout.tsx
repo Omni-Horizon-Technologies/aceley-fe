@@ -76,8 +76,8 @@ export function Navbar({ active }: { active: NavId }) {
               className={cn(
                 "flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-xs font-bold transition",
                 active === item.id
-                  ? "bg-[#312E81] text-white hover:bg-[#312E81]"
-                  : "text-slate-500 hover:bg-[#F8FAFC]",
+                  ? "bg-[#FACC15] text-[#1E1B4B] hover:bg-[#FACC15]"
+                  : "text-slate-500 hover:bg-[#FEFCE8] hover:text-[#1E1B4B]",
               )}
               href={item.href}
               key={item.id}
