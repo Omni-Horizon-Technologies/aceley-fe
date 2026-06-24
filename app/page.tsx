@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { SiteFooter } from "@/app/components/site-footer";
 import {
@@ -5,9 +6,35 @@ import {
   Icon,
   MockDashboardPreview,
   PrimaryButton,
-  QuickActionCard,
   SecondaryButton,
 } from "@/app/components/ui";
+
+const visualFeatures = [
+  {
+    description:
+      "Drop class notes into a clean editor and generate a study-ready deck.",
+    href: "/auth",
+    image: "/visuals/paste-notes.svg",
+    imageAlt: "Study desk with notes, flashcards, and a laptop",
+    title: "Paste Notes",
+  },
+  {
+    description:
+      "Bring in a file or image and keep everything in one simple flow.",
+    href: "/auth",
+    image: "/visuals/scan-upload.svg",
+    imageAlt: "Tablet scanning paper notes into flashcards",
+    title: "Scan or Upload",
+  },
+  {
+    description:
+      "Mark each card hard, good, or easy and keep moving through the deck.",
+    href: "/study",
+    image: "/visuals/study-smart.svg",
+    imageAlt: "Flashcard study screen with progress and rating buttons",
+    title: "Study Smart",
+  },
+] as const;
 
 export default function Home() {
   return (
@@ -75,25 +102,42 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          <QuickActionCard
-            description="Drop class notes into a clean editor and generate a study-ready deck."
-            href="/auth"
-            icon="notes"
-            title="Paste Notes"
-          />
-          <QuickActionCard
-            description="Bring in a file or image and keep everything in one simple flow."
-            href="/auth"
-            icon="scan"
-            title="Scan or Upload"
-          />
-          <QuickActionCard
-            description="Mark each card hard, good, or easy and keep moving through the deck."
-            href="/study"
-            icon="study"
-            title="Study Smart"
-          />
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {visualFeatures.map((feature) => (
+            <Link
+              className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-[#FB7185]/50 hover:shadow-md"
+              href={feature.href}
+              key={feature.title}
+            >
+              <div className="relative aspect-[4/3] bg-[#EEF2FF]">
+                <Image
+                  alt={feature.imageAlt}
+                  className="object-cover"
+                  fill
+                  loading="eager"
+                  sizes="(min-width: 768px) 33vw, 100vw"
+                  src={feature.image}
+                />
+              </div>
+              <div className="p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-base font-bold text-[#1E1B4B]">
+                    {feature.title}
+                  </h3>
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#312E81]/10 text-[#312E81] transition group-hover:bg-[#FB7185]/10 group-hover:text-[#FB7185]">
+                    <Icon name="spark" className="h-4 w-4" />
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  {feature.description}
+                </p>
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#312E81] transition group-hover:text-[#FB7185]">
+                  Try it now
+                  <span aria-hidden="true">-&gt;</span>
+                </span>
+              </div>
+            </Link>
+          ))}
         </div>
         <div className="mt-8 text-center">
           <SecondaryButton href="/pricing">View Pricing</SecondaryButton>

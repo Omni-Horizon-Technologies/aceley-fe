@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-labelledby="title desc">
+  <title id="title">Scan or upload study notes</title>
+  <desc id="desc">A tablet scanning paper notes and turning them into organised flashcards.</desc>
+  <defs>
+    <linearGradient id="bg" x1="129" y1="64" x2="831" y2="643" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9FAFB"/>
+      <stop offset=".52" stop-color="#EEF2FF"/>
+      <stop offset="1" stop-color="#FFE4E6"/>
+    </linearGradient>
+    <linearGradient id="device" x1="332" y1="112" x2="600" y2="613" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#312E81"/>
+      <stop offset="1" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#1E1B4B" flood-opacity=".16"/>
+    </filter>
+  </defs>
+  <rect width="960" height="720" rx="48" fill="url(#bg)"/>
+  <path d="M74 180c72-96 208-130 320-84 77 32 104 94 192 103 104 10 143-68 225-36 65 25 93 111 69 181-29 84-122 89-151 170-28 77 34 121 0 171-46 68-200 41-290-7-87-46-89-96-168-109-89-15-129 42-190 5-79-49-70-237-7-394Z" fill="#fff" opacity=".62"/>
+  <g filter="url(#shadow)">
+    <rect x="338" y="112" width="284" height="496" rx="42" fill="url(#device)"/>
+    <rect x="362" y="154" width="236" height="402" rx="26" fill="#fff"/>
+    <rect x="396" y="194" width="132" height="14" rx="7" fill="#312E81"/>
+    <rect x="396" y="224" width="168" height="10" rx="5" fill="#CBD5E1"/>
+    <rect x="396" y="252" width="118" height="10" rx="5" fill="#CBD5E1"/>
+    <rect x="390" y="300" width="180" height="146" rx="20" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="4" stroke-dasharray="14 12"/>
+    <path d="M480 338v66" stroke="#312E81" stroke-width="12" stroke-linecap="round"/>
+    <path d="M452 366l28-28 28 28" fill="none" stroke="#312E81" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="416" y="482" width="128" height="34" rx="17" fill="#FB7185"/>
+    <circle cx="480" cy="582" r="11" fill="#C7D2FE"/>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="126" y="194" width="232" height="278" rx="24" transform="rotate(-8 126 194)" fill="#fff"/>
+    <rect x="159" y="231" width="108" height="14" rx="7" transform="rotate(-8 159 231)" fill="#FB7185"/>
+    <rect x="164" y="277" width="152" height="10" rx="5" transform="rotate(-8 164 277)" fill="#CBD5E1"/>
+    <rect x="171" y="323" width="176" height="10" rx="5" transform="rotate(-8 171 323)" fill="#CBD5E1"/>
+    <rect x="177" y="369" width="124" height="10" rx="5" transform="rotate(-8 177 369)" fill="#CBD5E1"/>
+    <rect x="182" y="410" width="152" height="10" rx="5" transform="rotate(-8 182 410)" fill="#CBD5E1"/>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="626" y="238" width="190" height="120" rx="22" transform="rotate(9 626 238)" fill="#312E81"/>
+    <rect x="660" y="272" width="90" height="12" rx="6" transform="rotate(9 660 272)" fill="#fff"/>
+    <rect x="656" y="311" width="122" height="10" rx="5" transform="rotate(9 656 311)" fill="#C7D2FE"/>
+    <rect x="636" y="392" width="190" height="120" rx="22" transform="rotate(-7 636 392)" fill="#fff"/>
+    <rect x="668" y="425" width="86" height="12" rx="6" transform="rotate(-7 668 425)" fill="#FB7185"/>
+    <rect x="668" y="464" width="128" height="10" rx="5" transform="rotate(-7 668 464)" fill="#CBD5E1"/>
+  </g>
+  <path d="M718 564c54-18 88 2 101 32" stroke="#FB7185" stroke-width="18" stroke-linecap="round" opacity=".55"/>
+  <path d="M172 558c61 32 123 30 186-6" stroke="#312E81" stroke-width="18" stroke-linecap="round" opacity=".12"/>
+</svg>
