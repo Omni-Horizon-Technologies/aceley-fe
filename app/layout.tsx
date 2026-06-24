@@ -6,8 +6,8 @@ export const metadata: Metadata = {
   description:
     "A simple flashcard learning app for students who want to turn notes into study cards quickly.",
   icons: {
-    icon: "/files/aceley_favicon.svg",
-    apple: "/files/aceley_appicon.svg",
+    icon: "/files/profile%20p.jpeg",
+    apple: "/files/profile%20p.jpeg",
   },
 };
 

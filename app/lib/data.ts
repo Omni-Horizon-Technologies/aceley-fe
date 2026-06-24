@@ -104,7 +104,7 @@ export const deckFlashcards: Record<string, StudyCard[]> = {
 export const flashcards: StudyCard[] = deckFlashcards["biology-revision"];
 
 export const profileStats = [
-  { label: "Study streak", value: "12 days", tone: "coral" },
+  { label: "Study streak", value: "12 days", tone: "yellow" },
   { label: "Total decks", value: "3", tone: "indigo" },
   { label: "Cards studied", value: "412", tone: "ink" },
 ];

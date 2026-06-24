@@ -71,7 +71,7 @@ export function LottieMascot({ className = "" }: { className?: string }) {
           loop={!reduceMotion}
         />
       ) : (
-        <div className="grid aspect-square place-items-center rounded-lg bg-white/10 text-4xl font-black text-[#FB7185]">
+        <div className="grid aspect-square place-items-center rounded-lg bg-white/10 text-4xl font-black text-[#FACC15]">
           A
         </div>
       )}

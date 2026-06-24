@@ -22,7 +22,7 @@ export default function ProfilePage() {
             <StudySummaryCard
               key={stat.label}
               label={stat.label}
-              tone={stat.tone as "indigo" | "coral" | "ink"}
+              tone={stat.tone as "indigo" | "yellow" | "ink"}
               value={stat.value}
             />
           ))}

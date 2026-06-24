@@ -71,7 +71,7 @@ export function SiteFooter() {
                   {group.links.map((link) => (
                     <li key={`${group.title}-${link.label}`}>
                       <Link
-                        className="text-sm font-semibold text-slate-600 transition hover:text-[#FB7185]"
+                        className="text-sm font-semibold text-slate-600 transition hover:text-[#CA8A04]"
                         href={link.href}
                       >
                         {link.label}

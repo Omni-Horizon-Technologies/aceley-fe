@@ -47,7 +47,7 @@ export default function CreateDeckPage() {
           </div>
 
           <aside className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-            <p className="text-sm font-bold text-[#FB7185]">Generated preview</p>
+            <p className="text-sm font-bold text-[#CA8A04]">Generated preview</p>
             <h2 className="mt-2 text-2xl font-black tracking-tight text-[#1E1B4B]">
               3 editable cards
             </h2>

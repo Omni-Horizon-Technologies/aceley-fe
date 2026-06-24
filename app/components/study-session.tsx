@@ -57,7 +57,7 @@ export function StudySession({ cards }: { cards: StudyCard[] }) {
     return (
       <section className="mx-auto max-w-4xl">
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm md:p-10">
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-lg bg-[#FB7185]/10 text-[#FB7185]">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-lg bg-[#FACC15]/10 text-[#CA8A04]">
             <Icon name="spark" />
           </div>
           <h1 className="mt-6 text-3xl font-black tracking-tight text-[#1E1B4B] md:text-4xl">
@@ -68,13 +68,13 @@ export function StudySession({ cards }: { cards: StudyCard[] }) {
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             <StudySummaryCard label="Cards studied" value={`${studied}`} />
-            <StudySummaryCard label="Cards mastered" value={`${mastered}`} tone="coral" />
+            <StudySummaryCard label="Cards mastered" value={`${mastered}`} tone="yellow" />
             <StudySummaryCard label="Cards to review" value={`${review}`} tone="ink" />
           </div>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <PrimaryButton href="/dashboard">Back to Dashboard</PrimaryButton>
             <button
-              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-[#1E1B4B] shadow-sm transition hover:border-[#FB7185]/60 hover:text-[#FB7185] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FB7185]/20"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-[#1E1B4B] shadow-sm transition hover:border-[#FACC15]/60 hover:text-[#CA8A04] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/20"
               onClick={restart}
               type="button"
             >
@@ -91,7 +91,7 @@ export function StudySession({ cards }: { cards: StudyCard[] }) {
       <div className="sticky top-0 z-10 -mx-4 bg-[#F8FAFC]/95 px-4 pb-5 pt-2 backdrop-blur sm:-mx-6 sm:px-6 lg:top-0">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-[#FB7185]">Biology Revision</p>
+            <p className="text-sm font-semibold text-[#CA8A04]">Biology Revision</p>
             <h1 className="mt-1 text-2xl font-black tracking-tight text-[#1E1B4B]">
               Study Mode
             </h1>
@@ -111,7 +111,7 @@ export function StudySession({ cards }: { cards: StudyCard[] }) {
           aria-pressed={isFlipped}
           className={cn(
             "min-h-[22rem] w-full rounded-lg border border-slate-200 bg-white p-7 text-left shadow-lg shadow-[#1E1B4B]/8 transition duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#312E81]/20 md:min-h-[28rem] md:p-10",
-            isFlipped && "border-[#FB7185]/50 bg-[#FFF7F8]",
+            isFlipped && "border-[#FACC15]/50 bg-[#FEFCE8]",
           )}
           onClick={() => setIsFlipped((value) => !value)}
           type="button"
@@ -138,7 +138,7 @@ export function StudySession({ cards }: { cards: StudyCard[] }) {
             className={cn(
               "min-h-12 rounded-lg border px-5 py-3 text-sm font-black shadow-sm transition focus:outline-none focus-visible:ring-4",
               grade === "Hard" &&
-                "border-[#FB7185]/30 bg-[#FB7185]/10 text-[#FB7185] hover:bg-[#FB7185] hover:text-white focus-visible:ring-[#FB7185]/20",
+                "border-[#FACC15]/30 bg-[#FACC15]/10 text-[#CA8A04] hover:bg-[#FACC15] hover:text-[#1E1B4B] focus-visible:ring-[#FACC15]/20",
               grade === "Good" &&
                 "border-[#312E81]/20 bg-white text-[#312E81] hover:bg-[#312E81] hover:text-white focus-visible:ring-[#312E81]/20",
               grade === "Easy" &&

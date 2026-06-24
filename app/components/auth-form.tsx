@@ -70,7 +70,7 @@ export function AuthForm() {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-[#1E1B4B]/8 sm:p-6">
       <button
-        className="flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:border-[#FB7185]/60 hover:text-[#FB7185] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FB7185]/20"
+        className="flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:border-[#FACC15]/60 hover:text-[#CA8A04] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/20"
         onClick={handleGoogleAuth}
         type="button"
       >
@@ -124,7 +124,7 @@ export function AuthForm() {
         className={cn(
           "mt-4 rounded-lg px-3 py-2 text-sm leading-6",
           state === "sent" && "bg-emerald-50 text-emerald-700",
-          state === "error" && "bg-[#FB7185]/10 text-[#FB7185]",
+          state === "error" && "bg-[#FACC15]/10 text-[#CA8A04]",
           state === "idle" && "bg-[#F8FAFC] text-slate-600",
           state === "loading" && "bg-[#312E81]/10 text-[#312E81]",
         )}

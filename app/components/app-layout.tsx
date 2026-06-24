@@ -58,7 +58,7 @@ export function Navbar({ active }: { active: NavId }) {
             <BrandMark />
           </div>
           <Link
-            className="rounded-lg bg-[#FB7185] px-4 py-2 text-sm font-bold text-white shadow-sm"
+            className="rounded-lg bg-[#FACC15] px-4 py-2 text-sm font-bold text-[#1E1B4B] shadow-sm"
             href="/study"
           >
             Study

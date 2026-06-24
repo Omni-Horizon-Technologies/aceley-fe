@@ -110,8 +110,8 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
             className={cn(
               "rounded-lg px-3 py-1 text-xs font-black uppercase tracking-[0.14em]",
               plan.highlighted
-                ? "bg-[#FB7185] text-white"
-                : "bg-[#FB7185]/10 text-[#FB7185]",
+                ? "bg-[#FACC15] text-[#1E1B4B]"
+                : "bg-[#FACC15]/10 text-[#CA8A04]",
             )}
           >
             {plan.badge}
@@ -161,7 +161,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
           </p>
         ) : null}
         {plan.savings ? (
-          <p className="mt-2 inline-flex rounded-lg bg-[#FB7185]/10 px-3 py-1 text-sm font-black text-[#FB7185]">
+          <p className="mt-2 inline-flex rounded-lg bg-[#FACC15]/10 px-3 py-1 text-sm font-black text-[#CA8A04]">
             {plan.savings}
           </p>
         ) : null}
@@ -171,7 +171,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
         {plan.highlighted ? (
           <PrimaryButton
             href={plan.href}
-            className="w-full bg-[#FB7185] hover:bg-white hover:text-[#312E81]"
+            className="w-full bg-[#FACC15] !text-[#1E1B4B] hover:bg-white hover:!text-[#312E81]"
           >
             {plan.cta}
           </PrimaryButton>
@@ -189,7 +189,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
               className={cn(
                 "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-lg",
                 plan.highlighted
-                  ? "bg-white/12 text-[#FB7185]"
+                  ? "bg-white/12 text-[#FACC15]"
                   : "bg-[#312E81]/10 text-[#312E81]",
               )}
             >
@@ -224,7 +224,7 @@ export default function PricingPage() {
             <SecondaryButton href="/dashboard" className="hidden sm:inline-flex">
               Try Demo
             </SecondaryButton>
-            <PrimaryButton href="/auth" className="bg-[#FB7185] hover:bg-[#312E81]">
+            <PrimaryButton href="/auth" className="bg-[#FACC15] !text-[#1E1B4B] hover:bg-[#312E81] hover:!text-white">
               Start Free
             </PrimaryButton>
           </nav>
@@ -233,7 +233,7 @@ export default function PricingPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-18">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="inline-flex rounded-lg bg-[#FB7185]/10 px-3 py-2 text-sm font-black uppercase tracking-[0.16em] text-[#FB7185]">
+          <p className="inline-flex rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm font-black uppercase tracking-[0.16em] text-[#CA8A04]">
             Pricing
           </p>
           <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight text-[#1E1B4B] sm:text-5xl">

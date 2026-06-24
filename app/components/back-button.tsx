@@ -25,7 +25,7 @@ export function BackButton({
     <button
       aria-label="Go back to previous page"
       className={cn(
-        "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-[#1E1B4B] shadow-sm transition hover:border-[#FB7185]/60 hover:text-[#FB7185] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FB7185]/20",
+        "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-[#1E1B4B] shadow-sm transition hover:border-[#FACC15]/60 hover:text-[#CA8A04] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/20",
         className,
       )}
       onClick={goBack}

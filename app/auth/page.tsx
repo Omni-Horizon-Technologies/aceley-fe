@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { BackButton } from "@/app/components/back-button";
 import { AuthForm } from "@/app/components/auth-form";
 import { BrandMark, Icon, MockDashboardPreview } from "@/app/components/ui";
@@ -11,13 +10,13 @@ export default function AuthPage() {
           <div className="mx-auto flex max-w-3xl flex-col lg:h-full">
             <div className="flex items-center gap-3">
               <BackButton
-                className="border-white/15 bg-white/10 text-white hover:border-white/30 hover:text-[#FB7185]"
+                className="border-white/15 bg-white/10 text-white hover:border-white/30 hover:text-[#FACC15]"
                 fallbackHref="/"
               />
               <BrandMark tone="dark" />
             </div>
             <div className="flex flex-col py-8 lg:flex-1 lg:justify-center lg:py-12">
-              <p className="inline-flex w-fit rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-[#FB7185] ring-1 ring-white/15">
+              <p className="inline-flex w-fit rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-[#FACC15] ring-1 ring-white/15">
                 Sign in and start studying
               </p>
               <h1 className="mt-6 max-w-2xl text-4xl font-black leading-tight tracking-tight lg:text-5xl">
@@ -34,7 +33,7 @@ export default function AuthPage() {
                     className="rounded-lg border border-white/15 bg-white/10 p-4"
                     key={item}
                   >
-                    <Icon name="check" className="text-[#FB7185]" />
+                    <Icon name="check" className="text-[#FACC15]" />
                     <p className="mt-3 text-sm font-bold">{item}</p>
                   </div>
                 ))}
@@ -50,14 +49,7 @@ export default function AuthPage() {
         <section className="flex items-center justify-center px-4 py-8 sm:px-6 lg:min-h-screen lg:px-8 lg:py-10">
           <div className="w-full max-w-md">
             <div className="mb-8 flex justify-center">
-              <Image
-                alt="Aceley"
-                className="h-14 w-auto"
-                height={56}
-                priority
-                src="/files/aceley_horizontal.svg"
-                width={156}
-              />
+              <BrandMark />
             </div>
             <div className="mb-6 text-center">
               <h2 className="text-3xl font-black tracking-tight text-[#1E1B4B]">

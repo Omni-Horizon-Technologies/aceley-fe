@@ -162,36 +162,23 @@ export function Icon({
   );
 }
 
-export function BrandMark({ tone = "light" }: { tone?: "light" | "dark" }) {
-  if (tone === "light") {
-    return (
-      <Link href="/" className="inline-flex items-center">
-        <Image
-          alt="Aceley"
-          className="h-10 w-auto"
-          height={40}
-          priority
-          src="/files/aceley_horizontal.svg"
-          width={112}
-        />
-      </Link>
-    );
-  }
+const brandLogoSrc = "/files/profile%20p.jpeg";
 
+export function BrandMark({ tone = "light" }: { tone?: "light" | "dark" }) {
   return (
     <Link
       href="/"
       className={cn(
         "flex items-center gap-3 text-lg font-bold tracking-tight",
-        "text-white",
+        tone === "dark" ? "text-white" : "text-[#1E1B4B]",
       )}
     >
       <Image
         alt=""
-        className="h-10 w-10 rounded-lg shadow-sm"
+        className="h-10 w-10 rounded-lg object-cover shadow-sm"
         height={40}
         priority
-        src="/files/aceley_appicon.svg"
+        src={brandLogoSrc}
         width={40}
       />
       <span>Aceley</span>
@@ -215,7 +202,7 @@ export function PrimaryButton({
   type = "button",
 }: ButtonProps) {
   const styles = cn(
-    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#312E81] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#FB7185] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#312E81]/20",
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#312E81] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#FACC15] hover:text-[#1E1B4B] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#312E81]/20",
     disabled && "cursor-not-allowed opacity-60 hover:bg-[#312E81]",
     className,
   );
@@ -243,7 +230,7 @@ export function SecondaryButton({
   type = "button",
 }: ButtonProps) {
   const styles = cn(
-    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-5 py-3 text-sm font-semibold text-[#1E1B4B] shadow-sm transition hover:border-[#FB7185]/60 hover:text-[#FB7185] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FB7185]/20",
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-5 py-3 text-sm font-semibold text-[#1E1B4B] shadow-sm transition hover:border-[#FACC15]/60 hover:text-[#CA8A04] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/20",
     disabled && "cursor-not-allowed opacity-60 hover:border-[#E2E8F0] hover:text-[#1E1B4B]",
     className,
   );
@@ -297,7 +284,7 @@ export function PageHeader({
     <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
       <div>
         {eyebrow ? (
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#FB7185]">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#CA8A04]">
             {eyebrow}
           </p>
         ) : null}
@@ -317,11 +304,11 @@ export function DeckCard({ deck }: { deck: Deck }) {
   return (
     <Link
       href={`/decks/${deck.slug}`}
-      className="group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#FB7185]/50 hover:shadow-md"
+      className="group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#FACC15]/50 hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-[#FB7185]">{deck.subject}</p>
+          <p className="text-sm font-semibold text-[#CA8A04]">{deck.subject}</p>
           <h3 className="mt-2 text-lg font-bold text-[#1E1B4B]">{deck.title}</h3>
         </div>
         <span className="rounded-lg bg-[#F8FAFC] px-3 py-1 text-sm font-semibold text-[#312E81]">
@@ -356,7 +343,7 @@ export function QuickActionCard({
       href={href}
       className="group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#312E81]/30 hover:shadow-md"
     >
-      <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#312E81]/10 text-[#312E81] transition group-hover:bg-[#FB7185]/10 group-hover:text-[#FB7185]">
+      <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#312E81]/10 text-[#312E81] transition group-hover:bg-[#FACC15]/10 group-hover:text-[#CA8A04]">
         <Icon name={icon} />
       </span>
       <h3 className="mt-5 text-base font-bold text-[#1E1B4B]">{title}</h3>
@@ -458,7 +445,7 @@ export function DifficultySelector() {
 export function UploadBox() {
   return (
     <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center shadow-sm">
-      <div className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-[#FB7185]/10 text-[#FB7185]">
+      <div className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-[#FACC15]/10 text-[#CA8A04]">
         <Icon name="upload" />
       </div>
       <h3 className="mt-4 text-sm font-bold text-[#1E1B4B]">Upload notes</h3>
@@ -473,7 +460,7 @@ export function Flashcard({ card, index }: { card: StudyCard; index: number }) {
     <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-bold text-[#312E81]">Card {index + 1}</span>
-        <span className="rounded-lg bg-[#FB7185]/10 px-3 py-1 text-xs font-bold text-[#FB7185]">
+        <span className="rounded-lg bg-[#FACC15]/10 px-3 py-1 text-xs font-bold text-[#CA8A04]">
           {card.difficulty}
         </span>
       </div>
@@ -512,11 +499,11 @@ export function StudySummaryCard({
 }: {
   label: string;
   value: string;
-  tone?: "indigo" | "coral" | "ink";
+  tone?: "indigo" | "yellow" | "ink";
 }) {
   const toneClass = {
     indigo: "bg-[#312E81]/10 text-[#312E81]",
-    coral: "bg-[#FB7185]/10 text-[#FB7185]",
+    yellow: "bg-[#FACC15]/10 text-[#CA8A04]",
     ink: "bg-[#1E1B4B]/10 text-[#1E1B4B]",
   }[tone];
 
@@ -555,7 +542,7 @@ export function MockDashboardPreview() {
         <div className="rounded-lg bg-[#F8FAFC] p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#FB7185]">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#CA8A04]">
                 Continue
               </p>
               <h3 className="mt-2 text-lg font-black text-[#1E1B4B]">
@@ -586,7 +573,7 @@ export function MockDashboardPreview() {
             <span>Question</span>
           </div>
           <div className="mt-8 min-h-36 rounded-lg bg-white p-6 text-[#1E1B4B] shadow-lg">
-            <p className="text-sm font-bold text-[#FB7185]">Biology</p>
+            <p className="text-sm font-bold text-[#CA8A04]">Biology</p>
             <p className="mt-4 text-2xl font-black leading-tight">
               What is photosynthesis?
             </p>

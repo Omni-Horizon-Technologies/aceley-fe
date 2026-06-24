@@ -53,7 +53,7 @@ export default function Home() {
             <SecondaryButton href="/dashboard" className="hidden sm:inline-flex">
               Try Demo
             </SecondaryButton>
-            <PrimaryButton href="/auth" className="bg-[#FB7185] hover:bg-white hover:text-[#312E81]">
+            <PrimaryButton href="/auth" className="bg-[#FACC15] !text-[#1E1B4B] hover:bg-white hover:!text-[#312E81]">
               Get Started
             </PrimaryButton>
           </nav>
@@ -62,7 +62,7 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4 pb-14 pt-10 sm:px-6 sm:pb-16 lg:px-8 lg:pt-16">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
             <div className="max-w-3xl">
-              <p className="inline-flex rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-[#FB7185] ring-1 ring-white/15">
+              <p className="inline-flex rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-[#FACC15] ring-1 ring-white/15">
                 Notes to flashcards in under 30 seconds
               </p>
               <h1 className="mt-6 max-w-4xl text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
@@ -73,7 +73,7 @@ export default function Home() {
                 built for students.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <PrimaryButton href="/auth" className="bg-[#FB7185] hover:bg-white hover:text-[#312E81]">
+                <PrimaryButton href="/auth" className="bg-[#FACC15] !text-[#1E1B4B] hover:bg-white hover:!text-[#312E81]">
                   <Icon name="spark" />
                   Get Started
                 </PrimaryButton>
@@ -83,7 +83,7 @@ export default function Home() {
                 </SecondaryButton>
               </div>
             </div>
-            <div className="mx-auto w-full max-w-52 rounded-lg border border-white/15 bg-white/10 p-4 shadow-2xl shadow-[#1E1B4B]/25 sm:max-w-60 lg:mx-0">
+            <div className="mx-auto w-full max-w-52 sm:max-w-60 lg:mx-0">
               <LottieMascot className="mx-auto aspect-square w-full" />
             </div>
           </div>
@@ -95,7 +95,7 @@ export default function Home() {
       <section id="features" className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#FB7185]">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#CA8A04]">
               Simple workflow
             </p>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-[#1E1B4B]">
@@ -111,7 +111,7 @@ export default function Home() {
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {visualFeatures.map((feature) => (
             <Link
-              className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-[#FB7185]/50 hover:shadow-md"
+              className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-[#FACC15]/50 hover:shadow-md"
               href={feature.href}
               key={feature.title}
             >
@@ -130,14 +130,14 @@ export default function Home() {
                   <h3 className="text-base font-bold text-[#1E1B4B]">
                     {feature.title}
                   </h3>
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#312E81]/10 text-[#312E81] transition group-hover:bg-[#FB7185]/10 group-hover:text-[#FB7185]">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#312E81]/10 text-[#312E81] transition group-hover:bg-[#FACC15]/10 group-hover:text-[#CA8A04]">
                     <Icon name="spark" className="h-4 w-4" />
                   </span>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-slate-600">
                   {feature.description}
                 </p>
-                <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#312E81] transition group-hover:text-[#FB7185]">
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#312E81] transition group-hover:text-[#CA8A04]">
                   Try it now
                   <span aria-hidden="true">-&gt;</span>
                 </span>

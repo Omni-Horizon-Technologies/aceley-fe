@@ -39,7 +39,7 @@ export function DeckDetailsView({
 
         <section className="grid gap-4 md:grid-cols-3">
           <StudySummaryCard label="Total cards" value={`${deck.cards}`} />
-          <StudySummaryCard label="Progress" value={`${deck.progress}%`} tone="coral" />
+          <StudySummaryCard label="Progress" value={`${deck.progress}%`} tone="yellow" />
           <StudySummaryCard label="Difficult cards" value={`${difficultCards}`} tone="ink" />
         </section>
 

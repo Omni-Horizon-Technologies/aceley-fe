@@ -30,7 +30,7 @@ export default function DashboardPage() {
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm md:p-6">
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div>
-              <p className="text-sm font-bold text-[#FB7185]">Continue Learning</p>
+              <p className="text-sm font-bold text-[#CA8A04]">Continue Learning</p>
               <h2 className="mt-2 text-2xl font-black tracking-tight text-[#1E1B4B]">
                 Biology Revision
               </h2>
