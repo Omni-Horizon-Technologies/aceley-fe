@@ -26,6 +26,70 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+}
+
+.dark body {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.dark [class~="bg-[#F8FAFC]"],
+.dark [class~="bg-slate-50"] {
+  background-color: #0f172a;
+}
+
+.dark [class~="bg-white"],
+.dark [class~="bg-white/90"],
+.dark [class~="bg-white/92"],
+.dark [class~="bg-white/95"] {
+  background-color: #111827;
+}
+
+.dark [class~="bg-[#FEFCE8]"],
+.dark [class~="bg-[#FEF3C7]"],
+.dark [class~="bg-[#312E81]/10"],
+.dark [class~="bg-[#FACC15]/10"],
+.dark [class~="bg-[#FACC15]/20"],
+.dark [class~="bg-slate-100"] {
+  background-color: rgba(250, 204, 21, 0.12);
+}
+
+.dark [class~="text-[#1E1B4B]"],
+.dark [class~="text-slate-700"],
+.dark [class~="text-slate-800"],
+.dark [class~="text-slate-900"] {
+  color: #f8fafc;
+}
+
+.dark [class~="text-slate-400"],
+.dark [class~="text-slate-500"],
+.dark [class~="text-slate-600"] {
+  color: #cbd5e1;
+}
+
+.dark [class~="border-slate-100"],
+.dark [class~="border-slate-200"],
+.dark [class~="border-slate-300"],
+.dark [class~="divide-slate-100"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155;
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #111827;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #94a3b8;
+}
+
 button,
 a,
 input,
@@ -36,4 +100,39 @@ textarea {
 ::selection {
   background: #facc15;
   color: #1e1b4b;
+}
+
+@keyframes paywall-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.paywall-panel {
+  animation: paywall-slide-up 220ms ease-out;
+}
+
+@keyframes focus-pulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pulse-circle {
+  animation: focus-pulse 2.8s ease-in-out infinite;
+}
+
+.timer-ring {
+  background:
+    conic-gradient(#facc15 var(--timer-progress), #e2e8f0 0),
+    #e2e8f0;
 }

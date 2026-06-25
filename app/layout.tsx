@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { Providers } from "@/app/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Aceley | Notes to flashcards fast",
+  title: "Aceley | Become exam-ready",
   description:
-    "A simple flashcard learning app for students who want to turn notes into study cards quickly.",
+    "Aceley helps students get exam-ready with tutoring, plans, focus sessions, and study packs.",
   icons: {
-    icon: "/files/profile%20p.jpeg",
-    apple: "/files/profile%20p.jpeg",
+    icon: "/images%20/aceley_icons/web/favicon.ico",
+    apple: "/images%20/aceley_icons/web/apple-touch-icon.png",
   },
 };
 
@@ -17,8 +18,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className="h-full antialiased" data-scroll-behavior="smooth">
+      <body className="flex min-h-full flex-col">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

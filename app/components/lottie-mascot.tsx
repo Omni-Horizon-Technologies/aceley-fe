@@ -1,9 +1,8 @@
 "use client";
 
-import Lottie from "lottie-react";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { useSyncExternalStore } from "react";
 
-type AnimationData = Record<string, unknown>;
 const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
 
 function subscribeToReducedMotion(onStoreChange: () => void) {
@@ -27,54 +26,29 @@ function getReducedMotionSnapshot() {
   return window.matchMedia(reducedMotionQuery).matches;
 }
 
-export function LottieMascot({ className = "" }: { className?: string }) {
-  const [animationData, setAnimationData] = useState<AnimationData | null>(null);
+export function LottieMascot({
+  className = "",
+  name = "mascot_Hi",
+  sizeLabel = "Aceley study mascot",
+}: {
+  className?: string;
+  name?: "mascot_Hi" | "mascot_celebrate" | "mascot_winner" | "mascot_lost";
+  sizeLabel?: string;
+}) {
   const reduceMotion = useSyncExternalStore(
     subscribeToReducedMotion,
     getReducedMotionSnapshot,
     () => false,
   );
 
-  useEffect(() => {
-    let active = true;
-
-    fetch("/animation/mascot_Hi.json")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Unable to load Aceley mascot animation.");
-        }
-
-        return response.json() as Promise<AnimationData>;
-      })
-      .then((data) => {
-        if (active) {
-          setAnimationData(data);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setAnimationData(null);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
   return (
-    <div className={className} aria-label="Aceley study mascot" role="img">
-      {animationData ? (
-        <Lottie
-          animationData={animationData}
-          autoplay={!reduceMotion}
-          loop={!reduceMotion}
-        />
-      ) : (
-        <div className="grid aspect-square place-items-center rounded-lg bg-white/10 text-4xl font-black text-[#FACC15]">
-          A
-        </div>
-      )}
+    <div className={className} aria-label={sizeLabel} role="img">
+      <DotLottieReact
+        autoplay={!reduceMotion}
+        className="h-full w-full"
+        loop={!reduceMotion}
+        src={`/animations/${name}.json`}
+      />
     </div>
   );
 }

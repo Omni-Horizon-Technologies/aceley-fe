@@ -5,21 +5,48 @@ import type { Deck, StudyCard } from "@/app/lib/data";
 
 type IconName =
   | "arrowLeft"
+  | "arrowUp"
   | "dashboard"
   | "create"
   | "profile"
+  | "home"
+  | "spaces"
+  | "progress"
   | "mail"
   | "google"
+  | "apple"
   | "lock"
   | "check"
+  | "x"
   | "notes"
   | "upload"
   | "scan"
+  | "camera"
+  | "image"
   | "study"
   | "play"
+  | "pause"
+  | "reset"
   | "edit"
   | "delete"
   | "file"
+  | "paperclip"
+  | "chat"
+  | "pencil"
+  | "target"
+  | "warning"
+  | "bolt"
+  | "chevronRight"
+  | "calendar"
+  | "flame"
+  | "bookmark"
+  | "medal"
+  | "search"
+  | "school"
+  | "book"
+  | "clock"
+  | "brain"
+  | "music"
   | "spark";
 
 export function cn(...classes: Array<string | false | null | undefined>) {
@@ -38,6 +65,12 @@ export function Icon({
       <>
         <path d="M19 12H5" />
         <path d="m12 19-7-7 7-7" />
+      </>
+    ),
+    arrowUp: (
+      <>
+        <path d="M12 19V5" />
+        <path d="m5 12 7-7 7 7" />
       </>
     ),
     dashboard: (
@@ -61,6 +94,27 @@ export function Icon({
         <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
       </>
     ),
+    home: (
+      <>
+        <path d="m4 11 8-7 8 7" />
+        <path d="M6 10v10h12V10" />
+        <path d="M10 20v-6h4v6" />
+      </>
+    ),
+    spaces: (
+      <>
+        <path d="M4 7h7v7H4V7Z" />
+        <path d="M13 5h7v7h-7V5Z" />
+        <path d="M9 16h7v5H9v-5Z" />
+      </>
+    ),
+    progress: (
+      <>
+        <path d="M5 19V9" />
+        <path d="M12 19V5" />
+        <path d="M19 19v-7" />
+      </>
+    ),
     mail: (
       <>
         <path d="M4 6h16v12H4V6Z" />
@@ -75,6 +129,12 @@ export function Icon({
         <path d="M12 6.5c1.3 0 2.5.5 3.5 1.4L18.1 5A8.8 8.8 0 0 0 12 3a9 9 0 0 0-8 4.8l3.1 2.3A5.2 5.2 0 0 1 12 6.5Z" />
       </>
     ),
+    apple: (
+      <>
+        <path d="M16 3c-.9.1-1.8.7-2.3 1.4-.5.6-.8 1.5-.7 2.3.9 0 1.8-.5 2.4-1.2.6-.7.8-1.5.6-2.5Z" />
+        <path d="M19 15.7c-.4 1-1.8 3.7-3.3 3.8-.8 0-1.1-.5-2.1-.5s-1.4.5-2.2.5c-1.5-.1-2.7-2.4-3.3-3.7-1.2-2.6-1.3-5.6.6-7.2.9-.8 2.1-1.1 3.2-1.1.9 0 1.8.6 2.1.6.3 0 1.4-.7 2.5-.6.5 0 2 .2 2.9 1.6-2.5 1.4-2.1 5 .6 6.6Z" />
+      </>
+    ),
     lock: (
       <>
         <path d="M7 11V8a5 5 0 0 1 10 0v3" />
@@ -84,6 +144,12 @@ export function Icon({
     check: (
       <>
         <path d="M20 6 9 17l-5-5" />
+      </>
+    ),
+    x: (
+      <>
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
       </>
     ),
     notes: (
@@ -110,6 +176,19 @@ export function Icon({
         <path d="M8 12h8" />
       </>
     ),
+    camera: (
+      <>
+        <path d="M5 7h3l1.5-2h5L16 7h3v12H5V7Z" />
+        <path d="M12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+      </>
+    ),
+    image: (
+      <>
+        <path d="M5 5h14v14H5V5Z" />
+        <path d="m5 16 4-4 3 3 2-2 5 5" />
+        <path d="M15 9h.01" />
+      </>
+    ),
     study: (
       <>
         <path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H20v15H7.5A2.5 2.5 0 0 0 5 20.5v-15Z" />
@@ -117,6 +196,18 @@ export function Icon({
       </>
     ),
     play: <path d="M8 5v14l11-7-11-7Z" />,
+    pause: (
+      <>
+        <path d="M8 5v14" />
+        <path d="M16 5v14" />
+      </>
+    ),
+    reset: (
+      <>
+        <path d="M4 12a8 8 0 1 0 2.3-5.7" />
+        <path d="M4 5v5h5" />
+      </>
+    ),
     edit: (
       <>
         <path d="M5 19h4l10-10-4-4L5 15v4Z" />
@@ -136,6 +227,102 @@ export function Icon({
       <>
         <path d="M7 4h7l5 5v11H7V4Z" />
         <path d="M14 4v5h5" />
+      </>
+    ),
+    paperclip: (
+      <>
+        <path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.3 3.3 0 0 1 4.7 4.7l-8.4 8.4a1.7 1.7 0 0 1-2.4-2.4L16 6.6" />
+      </>
+    ),
+    chat: (
+      <>
+        <path d="M5 6h14v9H8l-3 3V6Z" />
+        <path d="M8 10h8" />
+        <path d="M8 13h5" />
+      </>
+    ),
+    pencil: (
+      <>
+        <path d="M5 19h4l10-10-4-4L5 15v4Z" />
+        <path d="m14 6 4 4" />
+      </>
+    ),
+    target: (
+      <>
+        <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
+        <path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />
+        <path d="M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" />
+      </>
+    ),
+    warning: (
+      <>
+        <path d="M12 4 3 20h18L12 4Z" />
+        <path d="M12 9v5" />
+        <path d="M12 17h.01" />
+      </>
+    ),
+    bolt: <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" />,
+    chevronRight: <path d="m9 18 6-6-6-6" />,
+    calendar: (
+      <>
+        <path d="M7 3v4" />
+        <path d="M17 3v4" />
+        <path d="M4 8h16" />
+        <path d="M5 5h14v16H5V5Z" />
+      </>
+    ),
+    flame: (
+      <>
+        <path d="M12 21c4 0 7-2.7 7-6.7 0-2.8-1.5-4.9-3.6-6.6.1 1.6-.5 2.7-1.6 3.5.2-3.1-1.4-5.6-4-7.2.1 3.2-1.9 4.6-3.3 6.4A6.2 6.2 0 0 0 5 14.3C5 18.3 8 21 12 21Z" />
+      </>
+    ),
+    bookmark: (
+      <>
+        <path d="M7 4h10v17l-5-3-5 3V4Z" />
+      </>
+    ),
+    medal: (
+      <>
+        <path d="m8 3 4 6 4-6" />
+        <path d="M12 21a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />
+        <path d="M12 15v2" />
+      </>
+    ),
+    search: (
+      <>
+        <path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z" />
+        <path d="m16 16 4 4" />
+      </>
+    ),
+    school: (
+      <>
+        <path d="m3 9 9-5 9 5-9 5-9-5Z" />
+        <path d="M7 12v4c2.5 2 7.5 2 10 0v-4" />
+      </>
+    ),
+    book: (
+      <>
+        <path d="M5 4h10a4 4 0 0 1 4 4v12H8a3 3 0 0 0-3 3V4Z" />
+        <path d="M5 4v16" />
+      </>
+    ),
+    clock: (
+      <>
+        <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
+        <path d="M12 7v5l3 2" />
+      </>
+    ),
+    brain: (
+      <>
+        <path d="M9 5a3 3 0 0 0-3 3v1a3 3 0 0 0 0 6v1a3 3 0 0 0 5 2.2V5.8A3 3 0 0 0 9 5Z" />
+        <path d="M15 5a3 3 0 0 1 3 3v1a3 3 0 0 1 0 6v1a3 3 0 0 1-5 2.2V5.8A3 3 0 0 1 15 5Z" />
+      </>
+    ),
+    music: (
+      <>
+        <path d="M9 18V6l10-2v12" />
+        <path d="M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+        <path d="M16 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
       </>
     ),
     spark: (
@@ -162,7 +349,7 @@ export function Icon({
   );
 }
 
-const brandLogoSrc = "/files/profile%20p.jpeg";
+const brandLogoSrc = "/images%20/files/profile%20p.jpeg";
 
 export function BrandMark({ tone = "light" }: { tone?: "light" | "dark" }) {
   return (
@@ -191,6 +378,7 @@ type ButtonProps = {
   disabled?: boolean;
   href?: string;
   className?: string;
+  onClick?: () => void;
   type?: "button" | "submit" | "reset";
 };
 
@@ -199,6 +387,7 @@ export function PrimaryButton({
   disabled,
   href,
   className,
+  onClick,
   type = "button",
 }: ButtonProps) {
   const styles = cn(
@@ -216,7 +405,7 @@ export function PrimaryButton({
   }
 
   return (
-    <button className={styles} disabled={disabled} type={type}>
+    <button className={styles} disabled={disabled} onClick={onClick} type={type}>
       {children}
     </button>
   );
@@ -227,6 +416,7 @@ export function SecondaryButton({
   disabled,
   href,
   className,
+  onClick,
   type = "button",
 }: ButtonProps) {
   const styles = cn(
@@ -244,7 +434,7 @@ export function SecondaryButton({
   }
 
   return (
-    <button className={styles} disabled={disabled} type={type}>
+    <button className={styles} disabled={disabled} onClick={onClick} type={type}>
       {children}
     </button>
   );
