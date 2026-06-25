@@ -615,6 +615,7 @@ export function OnboardingSourcePage() {
 export function PaywallPage() {
   const router = useRouter();
   const [selected, setSelected] = useState("yearly");
+  const goHome = () => router.replace("/");
 
   return (
     <main className="fixed inset-0 z-50 flex items-end bg-[#1E1B4B]/45 text-[#1E1B4B]">
@@ -624,7 +625,7 @@ export function PaywallPage() {
           <button
             aria-label="Close paywall"
             className="grid h-10 w-10 place-items-center rounded-lg bg-white shadow-sm"
-            onClick={() => router.push("/")}
+            onClick={goHome}
             type="button"
           >
             <Icon name="x" className="h-4 w-4" />
@@ -686,6 +687,13 @@ export function PaywallPage() {
           <div className="mx-auto max-w-md">
             <button className="min-h-12 w-full rounded-lg bg-[#FACC15] px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm" type="button">
               Start your 7 day free trial
+            </button>
+            <button
+              className="mt-3 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:border-[#312E81]/30 hover:bg-slate-50"
+              onClick={goHome}
+              type="button"
+            >
+              Continue without Pro
             </button>
             <div className="mt-3 flex justify-center gap-4 text-xs font-bold text-slate-500">
               <span>Privacy</span>
