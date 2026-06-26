@@ -1,5 +1,5 @@
 import { BackButton } from "@/app/components/back-button";
-import { AuthForm } from "@/app/components/auth-form";
+import { AuthPageEntry, PublicAuthActions } from "@/app/components/public-auth-actions";
 import { BrandMark, Icon, MockDashboardPreview } from "@/app/components/ui";
 
 export default function AuthPage() {
@@ -14,6 +14,7 @@ export default function AuthPage() {
                 fallbackHref="/"
               />
               <BrandMark tone="dark" />
+              <PublicAuthActions className="ml-auto" tone="dark" />
             </div>
             <div className="flex flex-col py-8 lg:flex-1 lg:justify-center lg:py-12">
               <p className="inline-flex w-fit rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-[#FACC15] ring-1 ring-white/15">
@@ -51,16 +52,7 @@ export default function AuthPage() {
             <div className="mb-8 flex justify-center">
               <BrandMark />
             </div>
-            <div className="mb-6 text-center">
-              <h2 className="text-3xl font-black tracking-tight text-[#1E1B4B]">
-                Welcome back
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Sign in to save decks, track progress, and keep studying across
-                devices.
-              </p>
-            </div>
-            <AuthForm />
+            <AuthPageEntry />
             <p className="mt-5 text-center text-xs leading-5 text-slate-500">
               By continuing, you agree to use Aceley for your own learning
               workspace.

@@ -213,6 +213,7 @@ function SectionTitle({ eyebrow, title }: { eyebrow?: string; title: string }) {
 
 export function OnboardingProfileReadyPage() {
   const router = useRouter();
+  const { hydrated, onboarded } = useAppState();
 
   return (
     <OnboardingShell>
@@ -248,6 +249,14 @@ export function OnboardingProfileReadyPage() {
         By continuing, you accept Aceley&apos;s <span className="font-bold text-[#312E81]">Terms</span> /{" "}
         <span className="font-bold text-[#312E81]">Privacy</span>
       </p>
+      {hydrated && !onboarded ? (
+        <p className="mt-4 text-center text-sm font-semibold text-slate-600">
+          Already have an account?{" "}
+          <Link className="font-black text-[#312E81] transition hover:text-[#CA8A04]" href="/auth">
+            Log in
+          </Link>
+        </p>
+      ) : null}
     </OnboardingShell>
   );
 }
@@ -614,6 +623,7 @@ export function OnboardingSourcePage() {
 
 export function PaywallPage() {
   const router = useRouter();
+  const { hydrated, onboarded } = useAppState();
   const [selected, setSelected] = useState("yearly");
   const goHome = () => router.replace("/");
 
@@ -695,6 +705,15 @@ export function PaywallPage() {
             >
               Continue without Pro
             </button>
+            {hydrated && !onboarded ? (
+              <button
+                className="mt-3 min-h-11 w-full rounded-lg bg-[#F8FAFC] px-5 py-3 text-sm font-black text-slate-600 transition hover:bg-slate-100 hover:text-[#312E81]"
+                onClick={() => router.push("/auth")}
+                type="button"
+              >
+                Already have an account? Log in
+              </button>
+            ) : null}
             <div className="mt-3 flex justify-center gap-4 text-xs font-bold text-slate-500">
               <span>Privacy</span>
               <span>Restore</span>
@@ -1949,6 +1968,11 @@ export function ProfilePageClient() {
     router.push("/onboarding/profile-ready");
   }
 
+  function signOut() {
+    state.resetOnboarding();
+    router.replace("/landing");
+  }
+
   return (
     <AppShell>
       <div className="space-y-6">
@@ -1996,6 +2020,7 @@ export function ProfilePageClient() {
           {[
             ["Notifications", "profile", undefined],
             ["Privacy", "lock", undefined],
+            ["Sign out", "arrowLeft", signOut],
             ["Reset onboarding", "reset", resetOnboarding],
             ["Clear all data", "delete", state.clearAllData],
           ].map(([label, icon, action]) => (
@@ -2006,7 +2031,7 @@ export function ProfilePageClient() {
               type="button"
             >
               <span className="flex items-center gap-3">
-                <Icon name={icon as "profile" | "lock" | "reset" | "delete"} className="h-4 w-4" />
+                <Icon name={icon as "profile" | "lock" | "arrowLeft" | "reset" | "delete"} className="h-4 w-4" />
                 {label as string}
               </span>
               <Icon name="chevronRight" className="h-4 w-4 text-slate-300" />

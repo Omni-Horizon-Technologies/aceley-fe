@@ -1,12 +1,10 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { BackButton } from "@/app/components/back-button";
+import { PricingPlanCta, PublicAuthActions } from "@/app/components/public-auth-actions";
 import { SiteFooter } from "@/app/components/site-footer";
 import {
   BrandMark,
   Icon,
-  PrimaryButton,
-  SecondaryButton,
   cn,
 } from "@/app/components/ui";
 
@@ -44,8 +42,8 @@ const plans: PricingPlan[] = [
       "Progress Tracking",
       "Standard Support",
     ],
-    cta: "Start Free",
-    href: "/auth",
+    cta: "Sign up free",
+    href: "/onboarding/profile-ready",
   },
   {
     name: "Student Pro",
@@ -65,7 +63,7 @@ const plans: PricingPlan[] = [
       "Priority Support",
     ],
     cta: "Upgrade to Pro",
-    href: "/auth",
+    href: "/paywall",
     highlighted: true,
   },
   {
@@ -83,7 +81,7 @@ const plans: PricingPlan[] = [
       "Best Value Plan",
     ],
     cta: "Get Annual Plan",
-    href: "/auth",
+    href: "/paywall",
   },
 ];
 
@@ -168,18 +166,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
       </div>
 
       <div className="mt-7">
-        {plan.highlighted ? (
-          <PrimaryButton
-            href={plan.href}
-            className="w-full bg-[#FACC15] !text-[#1E1B4B] hover:bg-white hover:!text-[#312E81]"
-          >
-            {plan.cta}
-          </PrimaryButton>
-        ) : (
-          <SecondaryButton href={plan.href} className="w-full">
-            {plan.cta}
-          </SecondaryButton>
-        )}
+        <PricingPlanCta cta={plan.cta} highlighted={plan.highlighted} href={plan.href} />
       </div>
 
       <ul className="mt-7 flex flex-1 flex-col gap-3">
@@ -214,19 +201,8 @@ export default function PricingPage() {
             <BackButton className="h-10 w-10" fallbackHref="/" />
             <BrandMark />
           </div>
-          <nav className="flex items-center gap-4" aria-label="Pricing navigation">
-            <Link
-              className="hidden text-sm font-bold text-slate-600 transition hover:text-[#312E81] sm:inline-flex"
-              href="/"
-            >
-              Home
-            </Link>
-            <SecondaryButton href="/dashboard" className="hidden sm:inline-flex">
-              Try Demo
-            </SecondaryButton>
-            <PrimaryButton href="/auth" className="bg-[#FACC15] !text-[#1E1B4B] hover:bg-[#312E81] hover:!text-white">
-              Start Free
-            </PrimaryButton>
+          <nav aria-label="Pricing account navigation">
+            <PublicAuthActions />
           </nav>
         </div>
       </header>

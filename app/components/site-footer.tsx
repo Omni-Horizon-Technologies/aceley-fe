@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PublicAuthFooterLinks } from "@/app/components/public-auth-actions";
 import { BrandMark, Icon } from "@/app/components/ui";
 
 const footerGroups = [
@@ -14,16 +15,7 @@ const footerGroups = [
     title: "Plans",
     links: [
       { href: "/pricing", label: "Pricing" },
-      { href: "/auth", label: "Start Free" },
-      { href: "/auth", label: "Student Pro" },
-    ],
-  },
-  {
-    title: "Account",
-    links: [
-      { href: "/auth", label: "Sign In" },
-      { href: "/profile", label: "Profile" },
-      { href: "/dashboard", label: "Try Demo" },
+      { href: "/paywall", label: "Aceley Pro" },
     ],
   },
 ];
@@ -81,6 +73,12 @@ export function SiteFooter() {
                 </ul>
               </div>
             ))}
+            <div>
+              <h2 className="text-sm font-black text-[#1E1B4B]">Account</h2>
+              <ul className="mt-4 space-y-3">
+                <PublicAuthFooterLinks linkClassName="text-sm font-semibold text-slate-600 transition hover:text-[#CA8A04]" />
+              </ul>
+            </div>
           </nav>
         </div>
 
