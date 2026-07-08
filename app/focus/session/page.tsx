@@ -1,3 +1,4 @@
+import { AppLayout } from "@/app/components/app-layout";
 import { FocusSessionPage } from "@/app/components/aceley-pages";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -11,10 +12,12 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   const minutes = Number(stringParam(params.minutes, "25"));
 
   return (
-    <FocusSessionPage
-      audio={stringParam(params.audio, "Silence")}
-      minutes={Number.isFinite(minutes) ? minutes : 25}
-      preset={stringParam(params.preset, "Pomodoro")}
-    />
+    <AppLayout>
+      <FocusSessionPage
+        audio={stringParam(params.audio, "Silence")}
+        minutes={Number.isFinite(minutes) ? minutes : 25}
+        preset={stringParam(params.preset, "Pomodoro")}
+      />
+    </AppLayout>
   );
 }

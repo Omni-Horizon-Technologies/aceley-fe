@@ -1,3 +1,4 @@
+import { AppLayout } from "@/app/components/app-layout";
 import { ExplainResultPage } from "@/app/components/aceley-pages";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -10,9 +11,11 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   const params = await searchParams;
 
   return (
-    <ExplainResultPage
-      style={stringParam(params.style, "lecturer")}
-      topic={stringParam(params.topic, "Cell biology")}
-    />
+    <AppLayout>
+      <ExplainResultPage
+        style={stringParam(params.style, "lecturer")}
+        topic={stringParam(params.topic, "Cell biology")}
+      />
+    </AppLayout>
   );
 }

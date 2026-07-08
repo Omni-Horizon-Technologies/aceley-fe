@@ -1,3 +1,4 @@
+import { AppLayout } from "@/app/components/app-layout";
 import { PlanNewPage } from "@/app/components/aceley-pages";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -9,5 +10,9 @@ function stringParam(value: string | string[] | undefined, fallback = "") {
 export default async function Page({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
 
-  return <PlanNewPage exam={stringParam(params.exam)} />;
+  return (
+    <AppLayout>
+      <PlanNewPage exam={stringParam(params.exam)} />
+    </AppLayout>
+  );
 }

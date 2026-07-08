@@ -4,10 +4,11 @@ import Link from "next/link";
 import { AuthForm } from "@/app/components/auth-form";
 import { Icon, PrimaryButton, SecondaryButton, cn } from "@/app/components/ui";
 import { useAppState } from "@/lib/state";
+import { useAuth } from "@/lib/auth";
 
 const signupHref = "/onboarding/profile-ready";
 const loginHref = "/auth";
-const appHref = "/";
+const appHref = "/home";
 
 type Tone = "dark" | "light";
 type Variant = "header" | "hero" | "stack";
@@ -72,22 +73,24 @@ export function PublicAuthActions({
   className?: string;
 }) {
   const { hydrated, onboarded } = useAppState();
+  const { isAuthenticated } = useAuth();
+  const isLoggedIn = onboarded && isAuthenticated;
   const wrapperClass =
     variant === "header"
       ? "flex shrink-0 items-center gap-2 sm:gap-3"
       : variant === "hero"
-        ? "flex w-full max-w-lg flex-col gap-3 sm:flex-row sm:justify-center"
+        ? "flex w-full max-w-lg flex-col gap-3 sm:flex-row"
         : "flex w-full flex-col gap-3 sm:flex-row lg:flex-col";
 
   if (!hydrated) {
     return <div aria-hidden="true" className={cn(placeholderClass(variant), className)} />;
   }
 
-  if (onboarded) {
+  if (isLoggedIn) {
     return (
       <div className={cn(wrapperClass, className)}>
         <Link
-          className={cn(primaryClass(tone, variant), variant === "hero" && "mx-auto w-full max-w-xs flex-none")}
+          className={cn(primaryClass(tone, variant), variant === "hero" && "w-full max-w-xs flex-none")}
           href={appHref}
         >
           Open app
@@ -114,6 +117,7 @@ export function PublicAuthFooterLinks({
   linkClassName: string;
 }) {
   const { hydrated, onboarded } = useAppState();
+  const { isAuthenticated } = useAuth();
 
   if (!hydrated) {
     return (
@@ -123,7 +127,7 @@ export function PublicAuthFooterLinks({
     );
   }
 
-  if (onboarded) {
+  if (onboarded && isAuthenticated) {
     return (
       <li>
         <Link className={linkClassName} href={appHref}>
@@ -159,13 +163,15 @@ export function PricingPlanCta({
   highlighted?: boolean;
 }) {
   const { hydrated, onboarded } = useAppState();
+  const { isAuthenticated } = useAuth();
+  const isLoggedIn = onboarded && isAuthenticated;
   const isSignup = href === signupHref;
   if (isSignup && !hydrated) {
     return <div aria-hidden="true" className="h-11 w-full rounded-lg bg-slate-100" />;
   }
 
-  const resolvedHref = hydrated && onboarded && isSignup ? appHref : href;
-  const resolvedCta = hydrated && onboarded && isSignup ? "Open app" : cta;
+  const resolvedHref = hydrated && isLoggedIn && isSignup ? appHref : href;
+  const resolvedCta = hydrated && isLoggedIn && isSignup ? "Open app" : cta;
 
   if (highlighted) {
     return (
@@ -187,12 +193,13 @@ export function PricingPlanCta({
 
 export function AuthPageEntry() {
   const { hydrated, onboarded } = useAppState();
+  const { isAuthenticated } = useAuth();
 
   if (!hydrated) {
     return <div className="h-[28rem] rounded-lg border border-slate-200 bg-white shadow-lg shadow-[#1E1B4B]/8" />;
   }
 
-  if (onboarded) {
+  if (onboarded && isAuthenticated) {
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-6 text-center shadow-lg shadow-[#1E1B4B]/8">
         <span className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-[#312E81]/10 text-[#312E81]">

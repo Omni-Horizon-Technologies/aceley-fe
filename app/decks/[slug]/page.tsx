@@ -1,3 +1,4 @@
+import { AppLayout } from "@/app/components/app-layout";
 import { DeckDetailsView } from "@/app/components/deck-details-view";
 import { deckFlashcards, decks, type Deck } from "@/app/lib/data";
 
@@ -31,5 +32,9 @@ export default async function DeckSamplePage({
   const deck = getSampleDeck(slug);
   const cards = deckFlashcards[deck.slug] ?? deckFlashcards["biology-revision"];
 
-  return <DeckDetailsView cards={cards} deck={deck} />;
+  return (
+    <AppLayout>
+      <DeckDetailsView cards={cards} deck={deck} />
+    </AppLayout>
+  );
 }

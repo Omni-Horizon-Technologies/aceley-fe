@@ -1,13 +1,15 @@
+"use client";
+
+import { AppLayout } from "@/app/components/app-layout";
 import { StudyPackResultPage } from "@/app/components/aceley-pages";
 
-type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+export default function Page() {
+  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const source = params.get("source") || "Study material";
 
-function stringParam(value: string | string[] | undefined, fallback = "") {
-  return Array.isArray(value) ? value[0] ?? fallback : value ?? fallback;
-}
-
-export default async function Page({ searchParams }: { searchParams: SearchParams }) {
-  const params = await searchParams;
-
-  return <StudyPackResultPage source={stringParam(params.source, "Cell biology notes")} />;
+  return (
+    <AppLayout>
+      <StudyPackResultPage source={source} />
+    </AppLayout>
+  );
 }

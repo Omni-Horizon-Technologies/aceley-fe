@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { BackButton } from "@/app/components/back-button";
-import { PricingPlanCta, PublicAuthActions } from "@/app/components/public-auth-actions";
-import { SiteFooter } from "@/app/components/site-footer";
+import { AppLayout } from "@/app/components/app-layout";
+import { PricingPlanCta } from "@/app/components/public-auth-actions";
 import {
-  BrandMark,
   Icon,
   cn,
 } from "@/app/components/ui";
@@ -194,58 +192,43 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
 
 export default function PricingPage() {
   return (
-    <main className="min-h-screen bg-[#F8FAFC] text-[#1E1B4B]">
-      <header className="border-b border-slate-200 bg-white/90 px-4 py-5 backdrop-blur sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <BackButton className="h-10 w-10" fallbackHref="/" />
-            <BrandMark />
-          </div>
-          <nav aria-label="Pricing account navigation">
-            <PublicAuthActions />
-          </nav>
-        </div>
-      </header>
+    <AppLayout>
+      <div className="mx-auto max-w-3xl text-center">
+        <p className="inline-flex rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm font-black uppercase tracking-[0.16em] text-[#CA8A04]">
+          Pricing
+        </p>
+        <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight text-[#1E1B4B] sm:text-5xl">
+          Simple Pricing for Serious Students
+        </h1>
+        <p className="mt-5 text-lg leading-8 text-slate-600">
+          Start free and upgrade only when you need unlimited flashcards, AI
+          generation, and smarter study tools.
+        </p>
+      </div>
 
-      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-18">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="inline-flex rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm font-black uppercase tracking-[0.16em] text-[#CA8A04]">
-            Pricing
-          </p>
-          <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight text-[#1E1B4B] sm:text-5xl">
-            Simple Pricing for Serious Students
-          </h1>
-          <p className="mt-5 text-lg leading-8 text-slate-600">
-            Start free and upgrade only when you need unlimited flashcards, AI
-            generation, and smarter study tools.
-          </p>
-        </div>
+      <div className="mt-10 grid gap-5 lg:grid-cols-3 lg:items-stretch">
+        {plans.map((plan) => (
+          <PricingCard key={plan.name} plan={plan} />
+        ))}
+      </div>
 
-        <div className="mt-10 grid gap-5 lg:grid-cols-3 lg:items-stretch">
-          {plans.map((plan) => (
-            <PricingCard key={plan.name} plan={plan} />
+      <div className="mt-8 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {trustMessages.map((message) => (
+            <div
+              className="flex items-center gap-3 rounded-lg bg-[#F8FAFC] px-4 py-3"
+              key={message.label}
+            >
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#312E81]/10 text-[#312E81]">
+                <Icon name={message.icon} className="h-4 w-4" />
+              </span>
+              <span className="text-sm font-bold text-[#1E1B4B]">
+                {message.label}
+              </span>
+            </div>
           ))}
         </div>
-
-        <div className="mt-8 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {trustMessages.map((message) => (
-              <div
-                className="flex items-center gap-3 rounded-lg bg-[#F8FAFC] px-4 py-3"
-                key={message.label}
-              >
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#312E81]/10 text-[#312E81]">
-                  <Icon name={message.icon} className="h-4 w-4" />
-                </span>
-                <span className="text-sm font-bold text-[#1E1B4B]">
-                  {message.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <SiteFooter />
-    </main>
+      </div>
+    </AppLayout>
   );
 }

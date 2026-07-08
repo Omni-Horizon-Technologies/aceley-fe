@@ -13,7 +13,7 @@ import { flashcards } from "@/app/lib/data";
 
 export default function CreateDeckPage() {
   return (
-    <AppLayout active="create">
+    <AppLayout>
       <div className="space-y-8">
         <PageHeader
           description="Paste notes, add a file, and review generated cards before saving the deck."

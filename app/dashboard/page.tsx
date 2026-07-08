@@ -13,7 +13,7 @@ import { decks } from "@/app/lib/data";
 
 export default function DashboardPage() {
   return (
-    <AppLayout active="dashboard">
+    <AppLayout>
       <div className="space-y-8">
         <PageHeader
           action={

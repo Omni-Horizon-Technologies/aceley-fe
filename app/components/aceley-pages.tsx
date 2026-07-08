@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   useEffect,
   useMemo,
@@ -25,22 +25,37 @@ import {
 } from "@/app/components/ui";
 import {
   COUNTRIES,
-  DUMMY_SPACES,
   EXPLAIN_STYLES,
   FOCUS_AUDIO,
   FOCUS_PRESETS,
   MAJOR_SUGGESTIONS,
   PAYWALL_FEATURES,
   PAYWALL_PLANS,
-  SAMPLE_DECK,
-  SAMPLE_QUIZ,
   SOURCE_OPTIONS,
 } from "@/lib/constants";
-import { buildAskAnswer } from "@/lib/mock/ask";
-import { buildExplanation } from "@/lib/mock/explain";
-import { buildScanAnswer } from "@/lib/mock/scan";
-import { buildStudyPack } from "@/lib/mock/study-pack";
-import { buildTutorReply } from "@/lib/mock/tutor";
+import {
+  askQuestion,
+  completePlanDay,
+  createConversation,
+  createPlan,
+  explainTopic,
+  fetchPlan,
+  fetchPlans,
+  fetchProgress,
+  fetchSpaces,
+  generateFlashcards,
+  generateQuiz,
+  generateStudyPack,
+  recordStudySession,
+  scanUpload,
+  sendTutorMessage,
+  submitQuiz,
+  uploadFile,
+  type BackendPlan,
+  type BackendProgress,
+  type BackendScanResult,
+  type BackendSpace,
+} from "@/lib/services";
 import {
   daysUntil,
   planProgress,
@@ -48,12 +63,14 @@ import {
   type Plan,
   type ThemePreference,
 } from "@/lib/state";
+import { useAuth } from "@/lib/auth";
+import { useGoogleLogin } from "@react-oauth/google";
+import { HydrationGate } from "@/app/components/hydration-gate";
 
 const inputClass =
   "min-h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-[#1E1B4B] outline-none transition placeholder:text-slate-400 focus:border-[#312E81] focus:ring-4 focus:ring-[#312E81]/10";
 const textAreaClass =
   "min-h-36 w-full resize-y rounded-lg border border-slate-200 bg-white px-4 py-4 text-sm font-semibold leading-6 text-[#1E1B4B] outline-none transition placeholder:text-slate-400 focus:border-[#312E81] focus:ring-4 focus:ring-[#312E81]/10";
-type Space = (typeof DUMMY_SPACES)[number];
 type FocusPreset = (typeof FOCUS_PRESETS)[number];
 type FocusAudio = (typeof FOCUS_AUDIO)[number];
 
@@ -86,76 +103,6 @@ function activePlan(plans: Plan[]) {
   return plans.find((plan) => plan.completedDays < plan.totalDays) ?? plans[0];
 }
 
-function HydrationGate({ children }: { children: ReactNode }) {
-  const { hydrated } = useAppState();
-
-  if (!hydrated) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-[#F8FAFC] px-4 text-[#1E1B4B]">
-        <div className="h-12 w-12 animate-pulse rounded-lg bg-[#FACC15]" />
-      </main>
-    );
-  }
-
-  return children;
-}
-
-function AppShell({ children, showBack = true }: { children: ReactNode; showBack?: boolean }) {
-  const pathname = usePathname();
-  const navItems = [
-    { href: "/", label: "Home", icon: "home" as const },
-    { href: "/coach", label: "Coach", icon: "brain" as const },
-    { href: "/spaces", label: "Spaces", icon: "spaces" as const },
-    { href: "/progress", label: "Progress", icon: "progress" as const },
-    { href: "/profile", label: "Profile", icon: "profile" as const },
-  ];
-
-  return (
-    <HydrationGate>
-      <div className="min-h-screen bg-[#F8FAFC] text-[#1E1B4B]">
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/92 px-4 py-3 backdrop-blur">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              {showBack ? <BackButton className="h-10 w-10" fallbackHref="/" /> : null}
-              <BrandMark />
-            </div>
-            <Link
-              className="grid h-10 w-10 place-items-center rounded-lg bg-[#FACC15] text-[#1E1B4B] shadow-sm"
-              href="/paywall"
-              aria-label="Open Aceley Pro"
-            >
-              <Icon name="spark" className="h-4 w-4" />
-            </Link>
-          </div>
-        </header>
-        <main className="mx-auto max-w-5xl px-4 py-6 pb-28 sm:px-6 lg:px-8">{children}</main>
-        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-3 py-2 shadow-[0_-8px_30px_rgba(30,27,75,0.08)] backdrop-blur">
-          <div className="mx-auto grid max-w-lg grid-cols-5 gap-1 sm:gap-2">
-            {navItems.map((item) => {
-              const active = pathname === item.href;
-              return (
-                <Link
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-xs font-bold transition",
-                    active
-                      ? "bg-[#FACC15] text-[#1E1B4B]"
-                      : "text-slate-500 hover:bg-[#FEFCE8] hover:text-[#1E1B4B]",
-                  )}
-                  href={item.href}
-                  key={item.href}
-                >
-                  <Icon name={item.icon} className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-      </div>
-    </HydrationGate>
-  );
-}
 
 function OnboardingShell({
   children,
@@ -213,7 +160,45 @@ function SectionTitle({ eyebrow, title }: { eyebrow?: string; title: string }) {
 
 export function OnboardingProfileReadyPage() {
   const router = useRouter();
-  const { hydrated, onboarded } = useAppState();
+  const { hydrated, onboarded, updateAnswers, completeOnboarding } = useAppState();
+  const { loginWithAccessToken } = useAuth();
+  const [error, setError] = useState("");
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      const success = await loginWithAccessToken(tokenResponse.access_token);
+      if (success) {
+        // Pre-fill the name field from Google account
+        try {
+          const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+          });
+          const info = await res.json();
+          if (info.name) {
+            updateAnswers({ name: info.name });
+          }
+        } catch {
+          // ignore
+        }
+
+        // Returning user — backend profile already exists, skip onboarding
+        // We need to re-read auth state since loginWithAccessToken updated it
+        const raw = localStorage.getItem("aceley:v1:auth");
+        const hasProfile = raw && JSON.parse(raw).profile;
+        if (hasProfile) {
+          completeOnboarding();
+          router.push("/home");
+        } else {
+          router.push("/onboarding/name");
+        }
+      } else {
+        setError("Sign-in failed. Please try again.");
+      }
+    },
+    onError: () => {
+      setError("Google sign-in was cancelled.");
+    },
+  });
 
   return (
     <OnboardingShell>
@@ -229,22 +214,18 @@ export function OnboardingProfileReadyPage() {
         <p className="mt-3 text-base font-semibold text-slate-600">Become exam-ready, your way.</p>
       </div>
       <div className="mt-9 space-y-3">
-        {[
-          ["google", "Continue with Google"],
-          ["apple", "Continue with Apple"],
-          ["mail", "Continue with Email"],
-        ].map(([icon, label]) => (
-          <button
-            className="flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:border-[#FACC15]/70"
-            key={label}
-            onClick={() => router.push("/onboarding/name")}
-            type="button"
-          >
-            <Icon name={icon as "google" | "apple" | "mail"} />
-            {label}
-          </button>
-        ))}
+        <button
+          className="flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:border-[#FACC15]/70"
+          onClick={() => { setError(""); googleLogin(); }}
+          type="button"
+        >
+          <Icon name="google" />
+          Continue with Google
+        </button>
       </div>
+      {error ? (
+        <p className="mt-4 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{error}</p>
+      ) : null}
       <p className="mt-7 text-center text-xs leading-5 text-slate-500">
         By continuing, you accept Aceley&apos;s <span className="font-bold text-[#312E81]">Terms</span> /{" "}
         <span className="font-bold text-[#312E81]">Privacy</span>
@@ -578,6 +559,7 @@ export function OnboardingMajorPage() {
 
 export function OnboardingSourcePage() {
   const { answers, updateAnswers, completeOnboarding } = useAppState();
+  const { createBackendProfile, user } = useAuth();
 
   return (
     <OnboardingShell backHref="/onboarding/major" step="5 of 6">
@@ -604,7 +586,14 @@ export function OnboardingSourcePage() {
         <Link
           className="mt-8 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#FACC15] px-5 py-3 text-sm font-semibold text-[#1E1B4B] shadow-sm transition hover:bg-[#312E81] hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/25"
           href="/paywall"
-          onClick={() => completeOnboarding()}
+          onClick={async () => {
+            await createBackendProfile({
+              display_name: answers.name || user?.name || "Student",
+              role: "student",
+              grade: answers.level || undefined,
+            });
+            completeOnboarding();
+          }}
         >
           Continue
         </Link>
@@ -729,24 +718,47 @@ export function PaywallPage() {
 export function HomePage() {
   const router = useRouter();
   const state = useAppState();
-  const plan = activePlan(state.plans);
+  const { isAuthenticated, profile } = useAuth();
+  const [backendPlans, setBackendPlans] = useState<BackendPlan[]>([]);
+  const backendPlan = backendPlans.find((p) => p.status === "active") ?? backendPlans[0];
+  const localPlan = activePlan(state.plans);
   const examDays = daysUntil(state.answers.examDate);
-  const hasProgress = state.plans.length || state.savedQuizzes.length || state.askHistory.length || state.studySessions.length;
+  const hasProgress = backendPlans.length || state.plans.length || state.savedQuizzes.length || state.askHistory.length || state.studySessions.length;
 
   useEffect(() => {
-    if (state.hydrated && !state.onboarded) {
-      router.replace("/onboarding/profile-ready");
-    }
-  }, [router, state.hydrated, state.onboarded]);
+    fetchPlans()
+      .then(setBackendPlans)
+      .catch(() => {});
+  }, []);
 
-  const focus = plan
+  useEffect(() => {
+    if (!state.hydrated) return;
+    if (!state.onboarded) {
+      // Returning user with a backend profile — auto-mark onboarded
+      if (isAuthenticated && profile) {
+        state.completeOnboarding();
+      } else if (!isAuthenticated) {
+        router.replace("/onboarding/profile-ready");
+      }
+    }
+  }, [router, state, isAuthenticated, profile]);
+
+  const focus = backendPlan
     ? {
         overline: "TODAY'S FOCUS",
-        title: plan.subject,
-        sub: `Day ${Math.min(plan.completedDays + 1, plan.totalDays)} of ${plan.totalDays} · pick up where you left off`,
+        title: backendPlan.subject,
+        sub: `Day ${Math.min(backendPlan.completed_days + 1, backendPlan.total_days)} of ${backendPlan.total_days} · pick up where you left off`,
         icon: "target" as const,
-        href: `/plan/${plan.id}`,
+        href: `/plan/${backendPlan.id}`,
       }
+    : localPlan
+      ? {
+          overline: "TODAY'S FOCUS",
+          title: localPlan.subject,
+          sub: `Day ${Math.min(localPlan.completedDays + 1, localPlan.totalDays)} of ${localPlan.totalDays} · pick up where you left off`,
+          icon: "target" as const,
+          href: `/plan/${localPlan.id}`,
+        }
     : state.answers.weakTopics[0]
       ? {
           overline: "WEAK SPOT",
@@ -773,7 +785,6 @@ export function HomePage() {
   ];
 
   return (
-    <AppShell showBack={false}>
       <div className="space-y-6">
         <button className="flex w-full items-center gap-4 text-left" onClick={() => router.push("/profile")} type="button">
           <LottieMascot className="h-[100px] w-[100px] shrink-0" name="mascot_Hi" />
@@ -822,13 +833,13 @@ export function HomePage() {
           {hasProgress ? (
             <>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#CA8A04]">Keep the progress going</p>
-              {plan ? (
+              {backendPlan ? (
                 <div className="mt-3">
                   <div className="mb-2 flex justify-between text-sm font-bold">
-                    <span>{plan.subject}</span>
-                    <span>{planProgress(plan)}%</span>
+                    <span>{backendPlan.subject}</span>
+                    <span>{backendPlan.total_days ? Math.round((backendPlan.completed_days / backendPlan.total_days) * 100) : 0}%</span>
                   </div>
-                  <ProgressBar value={planProgress(plan)} />
+                  <ProgressBar value={backendPlan.total_days ? (backendPlan.completed_days / backendPlan.total_days) * 100 : 0} />
                 </div>
               ) : (
                 <p className="mt-3 text-sm font-semibold text-slate-600">
@@ -847,7 +858,6 @@ export function HomePage() {
           )}
         </Link>
       </div>
-    </AppShell>
   );
 }
 
@@ -857,9 +867,21 @@ type ChatMessage = {
   text: string;
 };
 
+/** Strip markdown bold/italic markers so chat text renders cleanly. */
+function cleanMarkdown(raw: string): string {
+  return raw
+    .replace(/\*\*\*(.+?)\*\*\*/g, "$1")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    .replace(/_(.+?)_/g, "$1");
+}
+
 export function TutorPage() {
   const { answers } = useAppState();
   const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "seed",
@@ -868,26 +890,66 @@ export function TutorPage() {
         "Hey 👋 I'm here to help you understand, not just answer. What are we working on right now — a topic, a question, or revision for a specific exam?",
     },
   ]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  function send(value = text) {
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, sending]);
+
+  async function send(value = text) {
     const clean = value.trim();
-    if (!clean) {
+    if (!clean || sending) {
       return;
     }
 
     dismissKeyboard();
+    setSending(true);
     setMessages((current) => [
       ...current,
       { id: `student-${Date.now()}`, role: "student", text: clean },
-      { id: `tutor-${Date.now()}`, role: "tutor", text: buildTutorReply(clean, answers.level) },
     ]);
     setText("");
+
+    try {
+      let convId = conversationId;
+      if (!convId) {
+        const conv = await createConversation(answers.subject || "General");
+        convId = conv.id;
+        setConversationId(convId);
+      }
+      const reply = await sendTutorMessage(convId!, clean);
+      setMessages((current) => [
+        ...current,
+        { id: reply.id, role: "tutor", text: cleanMarkdown(reply.content) },
+      ]);
+    } catch {
+      setMessages((current) => [
+        ...current,
+        { id: `error-${Date.now()}`, role: "tutor", text: "Sorry, something went wrong. Please try again." },
+      ]);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
   }
 
   return (
-    <AppShell>
       <div className="flex min-h-[calc(100vh-11rem)] flex-col">
-        <SectionTitle eyebrow="AI Tutor" title="Start AI tutoring" />
+        <div className="flex items-center justify-between">
+          <SectionTitle eyebrow="AI Tutor" title="Start AI tutoring" />
+          <Link
+            href="/tutor/history"
+            className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-200"
+          >
+            Chat History
+          </Link>
+        </div>
         <div className="mt-6 flex-1 space-y-4">
           {messages.map((message) => (
             <div className={cn("flex gap-3", message.role === "student" && "justify-end")} key={message.id}>
@@ -904,12 +966,26 @@ export function TutorPage() {
               </div>
             </div>
           ))}
+
+          {sending && (
+            <div className="flex gap-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#FACC15] text-sm font-black">A</span>
+              <div className="flex items-center gap-1.5 rounded-lg bg-white px-4 py-3 shadow-sm">
+                <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:0ms]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:150ms]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:300ms]" />
+              </div>
+            </div>
+          )}
+
+          <div ref={bottomRef} />
         </div>
         <div className="sticky bottom-20 mt-6 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
           <div className="mb-3 flex gap-2 overflow-x-auto">
             {["Explain a topic", "Help with a question", "Quiz me on something", "Build me a revision plan"].map((chip) => (
               <button
-                className="shrink-0 rounded-lg bg-[#FEFCE8] px-3 py-2 text-xs font-black text-[#CA8A04]"
+                className="shrink-0 rounded-lg bg-[#FEFCE8] px-3 py-2 text-xs font-black text-[#CA8A04] disabled:opacity-50"
+                disabled={sending}
                 key={chip}
                 onClick={() => send(chip)}
                 type="button"
@@ -925,12 +1001,17 @@ export function TutorPage() {
             <textarea
               className="min-h-11 flex-1 resize-none rounded-lg border border-slate-200 px-3 py-3 text-sm font-semibold outline-none focus:border-[#312E81]"
               onChange={(event) => setText(event.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Ask your tutor..."
               rows={1}
               value={text}
             />
             <button
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#FACC15] text-[#1E1B4B]"
+              className={cn(
+                "grid h-11 w-11 shrink-0 place-items-center rounded-lg transition",
+                sending ? "bg-slate-200 text-slate-400" : "bg-[#FACC15] text-[#1E1B4B]",
+              )}
+              disabled={sending}
               onClick={() => send()}
               type="button"
             >
@@ -939,7 +1020,6 @@ export function TutorPage() {
           </div>
         </div>
       </div>
-    </AppShell>
   );
 }
 
@@ -963,7 +1043,6 @@ export function AskPage() {
   }
 
   return (
-    <AppShell>
       <div className="space-y-6">
         <SectionTitle eyebrow="Homework Help" title="Ask Anything" />
         <HeroGradient title="Get a clean answer you can learn from.">
@@ -1027,18 +1106,35 @@ export function AskPage() {
           </div>
         </section>
       </div>
-    </AppShell>
   );
 }
 
 export function AskResultPage({ question, subject }: { question: string; subject: string }) {
-  const answer = useMemo(() => buildAskAnswer(question), [question]);
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const { savedExplanations, saveExplanation, removeSavedExplanation } = useAppState();
   const id = `ask-${subject}-${question}`.slice(0, 90);
   const saved = savedExplanations.some((item) => item.id === id);
+  const fetched = useRef(false);
+
+  useEffect(() => {
+    if (fetched.current) return;
+    fetched.current = true;
+    askQuestion(question, subject)
+      .then((data) => setAnswer(data.answer))
+      .catch(() => setAnswer("Sorry, something went wrong. Please try again."))
+      .finally(() => setLoading(false));
+  }, [question, subject]);
+
+  if (loading) {
+    return (
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <p className="text-sm font-black text-slate-400 animate-pulse">Thinking...</p>
+        </div>
+    );
+  }
 
   return (
-    <AppShell>
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-4">
           <SectionTitle title="Step-by-step answer" />
@@ -1047,34 +1143,21 @@ export function AskResultPage({ question, subject }: { question: string; subject
             onClick={() =>
               saved
                 ? removeSavedExplanation(id)
-                : saveExplanation({ id, topic: question, style: "ask", preview: answer.understand })
+                : saveExplanation({ id, topic: question, style: "ask", preview: (answer || "").slice(0, 100) })
             }
             type="button"
           >
             <Icon name="bookmark" className="h-4 w-4" />
           </button>
         </div>
-        <VerifiedBadge />
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-semibold text-slate-500">Question</p>
           <h2 className="mt-2 text-lg font-black">{question || "How do I solve this?"}</h2>
-          <span className="mt-4 inline-flex rounded-lg bg-[#312E81]/10 px-3 py-1 text-xs font-black text-[#312E81]">{subject || "Biology"}</span>
+          <span className="mt-4 inline-flex rounded-lg bg-[#312E81]/10 px-3 py-1 text-xs font-black text-[#312E81]">{subject || "General"}</span>
         </section>
-        <section className="space-y-4">
-          <ResultBlock label="Understand">{answer.understand}</ResultBlock>
-          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">Step By Step</p>
-            <ol className="mt-4 space-y-3">
-              {answer.steps.map((step, index) => (
-                <li className="flex gap-3 text-sm font-semibold leading-6" key={step}>
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#FACC15] text-xs font-black">{index + 1}</span>
-                  {step}
-                </li>
-              ))}
-            </ol>
-          </div>
-          <ResultBlock label="Key Concept">{answer.keyConcept}</ResultBlock>
-          <ResultBlock label="Try Something Similar">{answer.similar}</ResultBlock>
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">Answer</p>
+          <p className="mt-3 whitespace-pre-line text-sm font-semibold leading-6">{answer}</p>
         </section>
         <div className="grid gap-3 sm:grid-cols-3">
           <PrimaryButton href="/quiz">Practice this question</PrimaryButton>
@@ -1082,7 +1165,6 @@ export function AskResultPage({ question, subject }: { question: string; subject
           <SecondaryButton href="/flashcards">Make flashcards</SecondaryButton>
         </div>
       </div>
-    </AppShell>
   );
 }
 
@@ -1097,98 +1179,213 @@ function ResultBlock({ label, children }: { label: string; children: ReactNode }
 
 export function ScanPage() {
   const router = useRouter();
-  const [reading, setReading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
-  function capture() {
-    setReading(true);
-    window.setTimeout(() => router.push("/scan/result"), 1400);
+  async function handleFile(file: File) {
+    setError("");
+    setPreview(URL.createObjectURL(file));
+    setUploading(true);
+    try {
+      const upload = await uploadFile(file);
+      // Navigate to result page with upload ID
+      router.push(`/scan/result?uploadId=${upload.id}&filename=${encodeURIComponent(file.name)}`);
+    } catch {
+      setError("Failed to upload file. Please try again.");
+      setUploading(false);
+    }
+  }
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
   }
 
   return (
-    <AppShell>
       <div className="flex min-h-[calc(100vh-12rem)] flex-col">
         <SectionTitle title="Scan to solve" />
+        <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={onFileChange} />
         <div className="mt-8 flex flex-1 flex-col justify-center">
-          <div className="relative min-h-[420px] rounded-lg bg-[#111827] p-6 text-white shadow-xl">
-            <div className="absolute left-5 top-5 h-14 w-14 border-l-4 border-t-4 border-[#FACC15]" />
-            <div className="absolute right-5 top-5 h-14 w-14 border-r-4 border-t-4 border-[#FACC15]" />
-            <div className="absolute bottom-5 left-5 h-14 w-14 border-b-4 border-l-4 border-[#FACC15]" />
-            <div className="absolute bottom-5 right-5 h-14 w-14 border-b-4 border-r-4 border-[#FACC15]" />
-            <div className="grid h-full min-h-[360px] place-items-center text-center">
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FACC15]">
-                {reading ? "Reading the question..." : "Fit the question inside the frame"}
-              </p>
+          {preview ? (
+            <div className="relative min-h-[320px] overflow-hidden rounded-lg bg-[#111827] shadow-xl">
+              <img src={preview} alt="Preview" className="h-full w-full object-contain" />
+              {uploading && (
+                <div className="absolute inset-0 grid place-items-center bg-black/60">
+                  <div className="text-center">
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-white/30 border-t-[#FACC15]" />
+                    <p className="mt-3 text-sm font-black text-[#FACC15]">Uploading...</p>
+                  </div>
+                </div>
+              )}
             </div>
+          ) : (
+            <div
+              className="relative min-h-[320px] cursor-pointer rounded-lg bg-[#111827] p-6 text-white shadow-xl transition hover:bg-[#1a2030]"
+              onClick={() => fileRef.current?.click()}
+            >
+              <div className="absolute left-5 top-5 h-14 w-14 border-l-4 border-t-4 border-[#FACC15]" />
+              <div className="absolute right-5 top-5 h-14 w-14 border-r-4 border-t-4 border-[#FACC15]" />
+              <div className="absolute bottom-5 left-5 h-14 w-14 border-b-4 border-l-4 border-[#FACC15]" />
+              <div className="absolute bottom-5 right-5 h-14 w-14 border-b-4 border-r-4 border-[#FACC15]" />
+              <div className="grid h-full min-h-[260px] place-items-center text-center">
+                <div>
+                  <Icon name="upload" className="mx-auto h-8 w-8 text-[#FACC15]" />
+                  <p className="mt-4 text-sm font-black uppercase tracking-[0.18em] text-[#FACC15]">
+                    Tap to upload a photo or PDF
+                  </p>
+                  <p className="mt-2 text-xs text-white/50">Take a photo of your question, worksheet, or textbook page</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <p className="mt-4 rounded-lg bg-red-50 p-3 text-center text-sm font-semibold text-red-600">{error}</p>
+          )}
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <button
+              className="flex items-center justify-center gap-2 rounded-lg bg-[#FACC15] px-4 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:bg-[#f5c518]"
+              onClick={() => { fileRef.current?.setAttribute("capture", "environment"); fileRef.current?.click(); }}
+              disabled={uploading}
+              type="button"
+            >
+              <Icon name="camera" className="h-4 w-4" />
+              Take Photo
+            </button>
+            <button
+              className="flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:bg-slate-50"
+              onClick={() => { fileRef.current?.removeAttribute("capture"); fileRef.current?.click(); }}
+              disabled={uploading}
+              type="button"
+            >
+              <Icon name="file" className="h-4 w-4" />
+              Choose File
+            </button>
           </div>
-          <button
-            className="mx-auto mt-8 grid h-20 w-20 place-items-center rounded-full border-4 border-white bg-[#FACC15] text-[#1E1B4B] shadow-lg"
-            disabled={reading}
-            onClick={capture}
-            type="button"
-          >
-            <span className="h-12 w-12 rounded-full bg-white/60" />
-          </button>
-          <button className="mt-6 text-sm font-black text-slate-500" onClick={() => router.push("/scan/result")} type="button">
-            Skip - try with a demo question
-          </button>
         </div>
       </div>
-    </AppShell>
   );
 }
 
 export function ScanResultPage() {
-  const result = buildScanAnswer();
+  const searchParams = useSearchParams();
+  const uploadId = searchParams.get("uploadId");
+  const filename = searchParams.get("filename") || "Uploaded file";
+
+  const [result, setResult] = useState<BackendScanResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!uploadId) {
+      setError("No file uploaded. Please scan a document first.");
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    scanUpload(uploadId)
+      .then((data) => { if (!cancelled) setResult(data); })
+      .catch((err: Error) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [uploadId]);
+
+  if (loading) {
+    return (
+        <div className="space-y-5">
+          <SectionTitle title="Scanned answer" />
+          <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-[#312E81]" />
+            <p className="mt-4 text-sm font-black text-slate-500">Reading and analysing your document...</p>
+          </div>
+        </div>
+    );
+  }
+
+  if (error || !result) {
+    return (
+        <div className="space-y-5">
+          <SectionTitle title="Scanned answer" />
+          <div className="rounded-lg border border-red-200 bg-red-50 p-5 text-center">
+            <p className="text-sm font-black text-red-700">{error || "Failed to process scan"}</p>
+          </div>
+          <SecondaryButton href="/scan">Try again</SecondaryButton>
+        </div>
+    );
+  }
 
   return (
-    <AppShell>
       <div className="space-y-5">
         <SectionTitle title="Scanned answer" />
         <VerifiedBadge />
+
+        {/* OCR extracted text */}
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">Extracted Text</p>
-          <p className="mt-3 text-sm font-semibold leading-6">{result.extractedText}</p>
-          <span className="mt-4 inline-flex rounded-lg bg-[#312E81]/10 px-3 py-1 text-xs font-black text-[#312E81]">{result.subject}</span>
+          <p className="mt-1 text-xs text-slate-400">from {filename} · {Math.round(result.ocr.confidence * 100)}% confidence</p>
+          <p className="mt-3 max-h-48 overflow-y-auto text-sm font-semibold leading-6 whitespace-pre-wrap">{result.ocr.text || "No text detected"}</p>
         </section>
+
+        {/* AI explanation */}
         <ResultBlock label="Explanation">{result.explanation}</ResultBlock>
-        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">Step By Step</p>
-          <ol className="mt-4 space-y-3">
-            {result.steps.map((step, index) => (
-              <li className="flex gap-3 text-sm font-semibold leading-6" key={step}>
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#FACC15] text-xs font-black">{index + 1}</span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-        <ResultBlock label="Key Term">{result.keyTerm}</ResultBlock>
-        <ResultBlock label="Practice This Next">{result.practice}</ResultBlock>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <PrimaryButton href="/quiz">Try it now</PrimaryButton>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <PrimaryButton href={`/study-pack/result?uploadId=${uploadId}&filename=${encodeURIComponent(filename)}`}>
+            Study Pack
+          </PrimaryButton>
+          <SecondaryButton href={`/quiz?topic=${encodeURIComponent(result.ocr.text.slice(0, 2000))}`}>
+            Quiz me
+          </SecondaryButton>
           <SecondaryButton href="/tutor">Ask follow-up</SecondaryButton>
         </div>
       </div>
-    </AppShell>
   );
 }
 
 export function StudyPackPage() {
+  const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [source, setSource] = useState("paste");
   const [notes, setNotes] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
   const sources = [
     ["paste", "Paste notes", "notes"],
-    ["pdf", "Upload PDF", "file"],
-    ["photo", "Photo or screenshot", "camera"],
-    ["voice", "Voice memo", "music"],
+    ["upload", "Upload file", "file"],
   ] as const;
-  const selectedLabel = sources.find(([id]) => id === source)?.[1] ?? "Paste notes";
-  const query = source === "paste" ? notes || "Cell biology notes" : selectedLabel;
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) setSelectedFile(file);
+  }
+
+  async function handleGenerate() {
+    setError("");
+    if (source === "paste") {
+      const text = notes.trim();
+      if (!text) { setError("Please paste your notes first."); return; }
+      router.push(`/study-pack/result?source=${encodeURIComponent(text)}`);
+    } else if (source === "upload") {
+      if (!selectedFile) { setError("Please select a file to upload."); return; }
+      setUploading(true);
+      try {
+        const upload = await uploadFile(selectedFile);
+        router.push(`/study-pack/result?uploadId=${upload.id}&filename=${encodeURIComponent(selectedFile.name)}`);
+      } catch {
+        setError("Failed to upload file. Please try again.");
+        setUploading(false);
+      }
+    }
+  }
 
   return (
-    <AppShell>
       <div className="space-y-6">
         <SectionTitle eyebrow="Notes → Study Pack" title="Turn anything into revision" />
+        <input ref={fileRef} type="file" accept="image/*,application/pdf,.txt,.md" className="hidden" onChange={onFileChange} />
         <div className="grid grid-cols-2 gap-3">
           {sources.map(([id, label, icon]) => (
             <button
@@ -1208,10 +1405,22 @@ export function StudyPackPage() {
         {source === "paste" ? (
           <textarea className={textAreaClass} onChange={(event) => setNotes(event.target.value)} placeholder="Paste your notes..." value={notes} />
         ) : (
-          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
+          <div
+            className="cursor-pointer rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm transition hover:border-[#312E81]/40"
+            onClick={() => fileRef.current?.click()}
+          >
             <Icon name="upload" className="mx-auto text-[#312E81]" />
-            <p className="mt-3 text-sm font-black">{selectedLabel}</p>
-            <p className="mt-1 text-xs font-semibold text-slate-500">Upload support is coming soon.</p>
+            {selectedFile ? (
+              <>
+                <p className="mt-3 text-sm font-black">{selectedFile.name}</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">{(selectedFile.size / 1024).toFixed(0)} KB · Tap to change</p>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-sm font-black">Tap to select a file</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">PDF, image, or text file</p>
+              </>
+            )}
           </div>
         )}
         <div className="flex flex-wrap gap-2">
@@ -1221,38 +1430,110 @@ export function StudyPackPage() {
             </span>
           ))}
         </div>
-        <PrimaryButton className="w-full" href={`/study-pack/result?source=${encodeURIComponent(query)}`}>
-          Buy pack
-        </PrimaryButton>
+        {error && <p className="rounded-lg bg-red-50 p-3 text-center text-sm font-semibold text-red-600">{error}</p>}
+        <button
+          className="w-full rounded-lg bg-[#312E81] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#1E1B4B] disabled:opacity-50"
+          onClick={handleGenerate}
+          disabled={uploading}
+          type="button"
+        >
+          {uploading ? "Uploading..." : "Generate Study Pack"}
+        </button>
       </div>
-    </AppShell>
   );
 }
 
 export function StudyPackResultPage({ source }: { source: string }) {
-  const pack = useMemo(() => buildStudyPack(source), [source]);
+  const searchParams = useSearchParams();
+  const uploadId = searchParams.get("uploadId");
+  const filename = searchParams.get("filename") || source;
+
+  const [summary, setSummary] = useState("");
+  const [flashcards, setFlashcards] = useState<{ front: string; back: string }[]>([]);
+  const [quizQuestions, setQuizQuestions] = useState<{ question: string; options: string[]; correct_index: number; explanation: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [tab, setTab] = useState("Summary");
-  const tabs = ["Summary", "Flashcards", "Quiz", "Study guide", "Exam Qs"];
+  const tabs = ["Summary", "Flashcards", "Quiz"];
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        if (uploadId) {
+          // Real upload → generate study pack via backend OCR + LLM
+          const result = await generateStudyPack(uploadId, filename);
+          if (!cancelled) {
+            setSummary(result.summary);
+            setFlashcards(result.flashcards);
+            setQuizQuestions(result.quiz_questions);
+          }
+        } else {
+          // Text-based fallback — use ask + flashcards endpoints
+          const [askRes, fcRes] = await Promise.all([
+            askQuestion(`Summarise the following topic in detail with key points: ${source}`),
+            generateFlashcards(source, 8),
+          ]);
+          if (!cancelled) {
+            setSummary(askRes.answer);
+            setFlashcards(fcRes.cards);
+          }
+        }
+      } catch (err: unknown) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to generate study pack");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [source, uploadId, filename]);
+
+  if (loading) {
+    return (
+        <div className="space-y-5">
+          <SectionTitle title="Study pack" />
+          <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-[#312E81]" />
+            <p className="mt-4 text-sm font-black text-slate-500">
+              {uploadId ? "Reading your document and generating study materials..." : "Generating your study pack..."}
+            </p>
+          </div>
+        </div>
+    );
+  }
+
+  if (error) {
+    return (
+        <div className="space-y-5">
+          <SectionTitle title="Study pack" />
+          <div className="rounded-lg border border-red-200 bg-red-50 p-5 text-center">
+            <p className="text-sm font-black text-red-700">{error}</p>
+          </div>
+          <SecondaryButton href="/study-pack">Try again</SecondaryButton>
+        </div>
+    );
+  }
+
+  const activeTabs = quizQuestions.length > 0 ? tabs : tabs.filter((t) => t !== "Quiz");
 
   return (
-    <AppShell>
       <div className="space-y-5">
         <SectionTitle title="Study pack" />
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {[
-            ["Key points", pack.stats.keyPoints],
-            ["Flashcards", pack.stats.flashcards],
-            ["Quiz Qs", pack.stats.quizQs],
-            ["Exam Qs", pack.stats.examQs],
+            ["Flashcards", flashcards.length],
+            ["Quiz Qs", quizQuestions.length],
+            ["Source", (filename || source).slice(0, 16)],
           ].map(([label, value]) => (
-            <div className="rounded-lg border border-slate-200 bg-white p-3 text-center shadow-sm" key={label}>
+            <div className="rounded-lg border border-slate-200 bg-white p-3 text-center shadow-sm" key={String(label)}>
               <p className="text-xl font-black">{value}</p>
               <p className="mt-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-400">{label}</p>
             </div>
           ))}
         </div>
         <div className="flex gap-2 overflow-x-auto">
-          {tabs.map((item) => (
+          {activeTabs.map((item) => (
             <button
               className={cn("shrink-0 rounded-lg px-3 py-2 text-sm font-black", tab === item ? "bg-[#312E81] text-white" : "bg-white text-[#1E1B4B]")}
               key={item}
@@ -1264,11 +1545,11 @@ export function StudyPackResultPage({ source }: { source: string }) {
           ))}
         </div>
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          {tab === "Summary" ? <p className="text-sm font-semibold leading-6">{pack.summary}</p> : null}
+          {tab === "Summary" ? <p className="text-sm font-semibold leading-6 whitespace-pre-wrap">{summary}</p> : null}
           {tab === "Flashcards" ? (
             <div className="space-y-3">
-              {pack.flashcards.map((card) => (
-                <div className="rounded-lg bg-[#F8FAFC] p-4" key={card.front}>
+              {flashcards.map((card, i) => (
+                <div className="rounded-lg bg-[#F8FAFC] p-4" key={i}>
                   <p className="font-black">{card.front}</p>
                   <p className="mt-2 text-sm font-semibold text-slate-600">{card.back}</p>
                 </div>
@@ -1276,36 +1557,24 @@ export function StudyPackResultPage({ source }: { source: string }) {
             </div>
           ) : null}
           {tab === "Quiz" ? (
-            <ol className="space-y-3">
-              {pack.quiz.map((item) => (
-                <li className="text-sm font-semibold" key={item.question}>
-                  <span className="font-black">{item.number}. </span>
-                  {item.question}
-                  <p className="mt-1 text-slate-500">{item.answer}</p>
-                </li>
-              ))}
-            </ol>
-          ) : null}
-          {tab === "Study guide" ? (
-            <ol className="space-y-3">
-              {pack.studyGuide.map((item, index) => (
-                <li className="flex gap-3 text-sm font-semibold" key={item}>
-                  <span className="font-black text-[#CA8A04]">{index + 1}</span>
-                  {item}
-                </li>
-              ))}
-            </ol>
-          ) : null}
-          {tab === "Exam Qs" ? (
-            <div className="space-y-3">
-              {pack.examQs.map((item) => (
-                <p className="rounded-lg bg-[#F8FAFC] p-4 text-sm font-semibold" key={item}>{item}</p>
+            <div className="space-y-4">
+              {quizQuestions.map((q, i) => (
+                <div className="rounded-lg bg-[#F8FAFC] p-4" key={i}>
+                  <p className="font-black">{i + 1}. {q.question}</p>
+                  <div className="mt-2 space-y-1">
+                    {q.options.map((opt, j) => (
+                      <p key={j} className={cn("text-sm font-semibold", j === q.correct_index ? "text-emerald-600" : "text-slate-600")}>
+                        {String.fromCharCode(65 + j)}. {opt} {j === q.correct_index ? " ✓" : ""}
+                      </p>
+                    ))}
+                  </div>
+                  {q.explanation && <p className="mt-2 text-xs text-slate-500">{q.explanation}</p>}
+                </div>
               ))}
             </div>
           ) : null}
         </section>
       </div>
-    </AppShell>
   );
 }
 
@@ -1313,7 +1582,6 @@ export function TestPrepPage() {
   const exams = ["SAT", "ACT", "MCAT", "GRE", "GMAT", "JAMB", "WAEC", "A-Level", "IB", "NEET"];
 
   return (
-    <AppShell>
       <div className="space-y-6">
         <HeroGradient title="Pick an exam. Walk in ready.">
           Build a prep track around your date, confidence level, and daily study time.
@@ -1338,7 +1606,6 @@ export function TestPrepPage() {
         </section>
         <PrimaryButton href="/plan/new" className="w-full">Set up new prep track</PrimaryButton>
       </div>
-    </AppShell>
   );
 }
 
@@ -1347,7 +1614,6 @@ export function FocusPage() {
   const [audio, setAudio] = useState<FocusAudio>(FOCUS_AUDIO[0]);
 
   return (
-    <AppShell>
       <div className="space-y-6">
         <section className="rounded-lg bg-gradient-to-br from-[#312E81] to-[#1E1B4B] p-6 text-white shadow-sm">
           <div className="flex items-center justify-between gap-5">
@@ -1398,7 +1664,6 @@ export function FocusPage() {
           Start {preset.minutes}-min session
         </PrimaryButton>
       </div>
-    </AppShell>
   );
 }
 
@@ -1430,6 +1695,7 @@ export function FocusSessionPage({
     if (seconds === 0 && !recorded.current) {
       recorded.current = true;
       recordSession({ minutes, preset, audio });
+      recordStudySession({ minutes, preset, audio }).catch(() => {});
     }
   }, [audio, minutes, preset, recordSession, seconds]);
 
@@ -1438,7 +1704,6 @@ export function FocusSessionPage({
   const progress = 100 - Math.round((seconds / initialSeconds) * 100);
 
   return (
-    <AppShell>
       <div className="flex min-h-[calc(100vh-12rem)] flex-col items-center justify-center text-center">
         <div className="timer-ring grid h-72 w-72 place-items-center rounded-full" style={{ "--timer-progress": `${progress}%` } as CSSProperties}>
           <div className="grid h-56 w-56 place-items-center rounded-full bg-white shadow-sm">
@@ -1465,13 +1730,17 @@ export function FocusSessionPage({
           </button>
         </div>
       </div>
-    </AppShell>
   );
 }
 
 export function CoachPage() {
-  const { plans, answers } = useAppState();
-  const plan = activePlan(plans);
+  const { answers } = useAppState();
+  const [backendPlans, setBackendPlans] = useState<BackendPlan[]>([]);
+  const plan = backendPlans.find((p) => p.status === "active") ?? backendPlans[0] ?? null;
+
+  useEffect(() => {
+    fetchPlans().then(setBackendPlans).catch(() => {});
+  }, []);
 
   const guideItems = [
     {
@@ -1492,7 +1761,6 @@ export function CoachPage() {
   ];
 
   return (
-    <AppShell showBack={false}>
       <div className="space-y-6">
         <SectionTitle eyebrow="Coach" title="Your study plan" />
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -1540,7 +1808,7 @@ export function CoachPage() {
               <h3 className="mt-4 text-lg font-black text-[#1E1B4B]">Active plan</h3>
               <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
                 {plan
-                  ? `${plan.subject} · ${plan.completedDays}/${plan.totalDays} days · ${planProgress(plan)}% complete`
+                  ? `${plan.subject} · ${plan.completed_days}/${plan.total_days} days · ${plan.total_days ? Math.round((plan.completed_days / plan.total_days) * 100) : 0}% complete`
                   : "No active plan yet. Create one to start tracking."}
               </p>
             </Link>
@@ -1587,15 +1855,34 @@ export function CoachPage() {
           </section>
         ) : null}
       </div>
-    </AppShell>
   );
 }
 
 export function PlansPage() {
-  const { plans } = useAppState();
+  const [plans, setPlans] = useState<BackendPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPlans()
+      .then((data) => { if (!cancelled) setPlans(data); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading) {
+    return (
+        <div className="space-y-6">
+          <SectionTitle title="Study plans" />
+          <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <p className="text-sm font-black text-slate-500">Loading your plans...</p>
+          </div>
+        </div>
+    );
+  }
 
   return (
-    <AppShell>
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-4">
           <SectionTitle title="Study plans" />
@@ -1603,22 +1890,25 @@ export function PlansPage() {
         </div>
         {plans.length ? (
           <div className="space-y-3">
-            {plans.map((plan) => (
-              <Link className="block rounded-lg border border-slate-200 bg-white p-5 shadow-sm" href={`/plan/${plan.id}`} key={plan.id}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h2 className="text-lg font-black">{plan.subject}</h2>
-                    <p className="mt-1 text-sm font-semibold text-slate-500">
-                      {plan.completedDays}/{plan.totalDays} days · {formatDate(plan.examDate)}
-                    </p>
+            {plans.map((plan) => {
+              const progress = plan.total_days ? Math.round((plan.completed_days / plan.total_days) * 100) : 0;
+              return (
+                <Link className="block rounded-lg border border-slate-200 bg-white p-5 shadow-sm" href={`/plan/${plan.id}`} key={plan.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-black">{plan.subject}</h2>
+                      <p className="mt-1 text-sm font-semibold text-slate-500">
+                        {plan.completed_days}/{plan.total_days} days{plan.exam_date ? ` · ${formatDate(plan.exam_date)}` : ""}
+                      </p>
+                    </div>
+                    <span className="rounded-lg bg-[#FEFCE8] px-3 py-2 text-sm font-black text-[#CA8A04]">{progress}%</span>
                   </div>
-                  <span className="rounded-lg bg-[#FEFCE8] px-3 py-2 text-sm font-black text-[#CA8A04]">{planProgress(plan)}%</span>
-                </div>
-                <div className="mt-4">
-                  <ProgressBar value={planProgress(plan)} />
-                </div>
-              </Link>
-            ))}
+                  <div className="mt-4">
+                    <ProgressBar value={progress} />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         ) : (
           <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
@@ -1629,7 +1919,6 @@ export function PlansPage() {
           </div>
         )}
       </div>
-    </AppShell>
   );
 }
 
@@ -1641,21 +1930,36 @@ export function PlanNewPage({ exam = "" }: { exam?: string }) {
   const [confidence, setConfidence] = useState("Medium");
   const [hoursPerDay, setHoursPerDay] = useState("1");
   const [documentName, setDocumentName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState("");
 
-  function submit(event: FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!subject.trim() || !examDate) {
-      return;
-    }
+    if (!subject.trim() || !examDate || creating) return;
 
-    const plan = addPlan({ subject: subject.trim(), examDate, confidence, hoursPerDay, totalDays: 14 });
-    updateAnswers({ exam: exam || subject.trim(), examDate, hoursPerDay });
-    dismissKeyboard();
-    router.push(`/plan/${plan.id}`);
+    setCreating(true);
+    setError("");
+    try {
+      const plan = await createPlan({
+        subject: subject.trim(),
+        topic: subject.trim(),
+        exam_date: examDate,
+        total_days: 14,
+        confidence,
+        hours_per_day: hoursPerDay,
+      });
+      // Also save locally for dashboard widgets
+      addPlan({ subject: subject.trim(), examDate, confidence, hoursPerDay, totalDays: 14 });
+      updateAnswers({ exam: exam || subject.trim(), examDate, hoursPerDay });
+      dismissKeyboard();
+      router.push(`/plan/${plan.id}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create plan");
+      setCreating(false);
+    }
   }
 
   return (
-    <AppShell>
       <form className="space-y-5" onSubmit={submit}>
         <SectionTitle eyebrow="Create plan" title="Plan a new sprint" />
         <label className="block">
@@ -1711,115 +2015,151 @@ export function PlanNewPage({ exam = "" }: { exam?: string }) {
             />
           </label>
         </section>
-        <PrimaryButton className="w-full" disabled={!subject.trim() || !examDate} type="submit">Create plan</PrimaryButton>
+        {error && <p className="rounded-lg bg-red-50 p-3 text-sm font-black text-red-700">{error}</p>}
+        <PrimaryButton className="w-full" disabled={!subject.trim() || !examDate || creating} type="submit">
+          {creating ? "Generating your plan..." : "Create plan"}
+        </PrimaryButton>
       </form>
-    </AppShell>
   );
 }
 
-function planTasks(plan: Plan, day: number) {
-  return [
-    `Review ${plan.subject} fundamentals for 20 minutes.`,
-    `Complete ${Math.max(3, Math.min(8, day + 2))} practice questions.`,
-    "Mark weak spots and save one explanation.",
-  ];
-}
-
-function planFlashcards(plan: Plan, day: number) {
-  const focus = day <= 4 ? "foundation" : day <= 9 ? "practice" : "exam strategy";
-
-  return [
-    {
-      front: `Day ${day}: What is today's ${plan.subject} focus?`,
-      back: `Build ${focus} confidence with one focused review block, then test recall immediately.`,
-    },
-    {
-      front: `What should you do before practice questions?`,
-      back: `Write the rule, formula, or definition first so the method is clear before you start solving.`,
-    },
-    {
-      front: `How do you mark a weak spot today?`,
-      back: `Save the exact subtopic, note the mistake pattern, and revisit it in the next session.`,
-    },
-  ];
-}
-
 export function PlanDetailPage({ id }: { id: string }) {
-  const { plans } = useAppState();
-  const plan = plans.find((item) => item.id === id) ?? plans[0];
+  const [plan, setPlan] = useState<BackendPlan | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [day, setDay] = useState(1);
   const [showCards, setShowCards] = useState(false);
+  const [flashcards, setFlashcards] = useState<{ front: string; back: string }[]>([]);
+  const [cardsLoading, setCardsLoading] = useState(false);
   const [cardIndex, setCardIndex] = useState(0);
   const [cardFlipped, setCardFlipped] = useState(false);
 
-  if (!plan) {
+  useEffect(() => {
+    let cancelled = false;
+    fetchPlan(id)
+      .then((data) => { if (!cancelled) setPlan(data); })
+      .catch((err: Error) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [id]);
+
+  if (loading) {
     return (
-      <AppShell>
         <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <h1 className="text-xl font-black">Plan not found</h1>
-          <PrimaryButton href="/plan/new" className="mt-5">Create a plan</PrimaryButton>
+          <p className="text-sm font-black text-slate-500">Loading plan...</p>
         </div>
-      </AppShell>
     );
   }
 
-  const countdown = daysUntil(plan.examDate);
-  const flashcards = planFlashcards(plan, day);
-  const currentCard = flashcards[cardIndex];
+  if (error || !plan) {
+    return (
+        <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <h1 className="text-xl font-black">{error || "Plan not found"}</h1>
+          <PrimaryButton href="/plan/new" className="mt-5">Create a plan</PrimaryButton>
+        </div>
+    );
+  }
+
+  const countdown = plan.exam_date ? daysUntil(plan.exam_date) : null;
+  const dayData = plan.daily_tasks.find((t) => t.day === day);
+  const tasks = dayData?.tasks ?? [];
+  const dayFocus = dayData?.focus ?? plan.subject;
 
   function openDayCards(nextDay: number) {
     setDay(nextDay);
     setCardIndex(0);
     setCardFlipped(false);
+
+    // Generate flashcards for this day's focus topic
+    const focus = plan!.daily_tasks.find((t) => t.day === nextDay)?.focus ?? plan!.subject;
+    setCardsLoading(true);
     setShowCards(true);
+    generateFlashcards(`${plan!.subject}: ${focus}`, 5)
+      .then((data) => setFlashcards(data.cards))
+      .catch(() => setFlashcards([{ front: "Error generating cards", back: "Try again later" }]))
+      .finally(() => setCardsLoading(false));
   }
 
   function movePlanCard(delta: number) {
+    if (!flashcards.length) return;
     setCardIndex((value) => (value + delta + flashcards.length) % flashcards.length);
     setCardFlipped(false);
   }
 
+  async function toggleDayComplete(targetDay: number) {
+    const current = plan!.daily_tasks.find((t) => t.day === targetDay);
+    const newCompleted = !(current?.completed);
+    try {
+      const updated = await completePlanDay(plan!.id, targetDay, newCompleted);
+      setPlan(updated);
+    } catch {
+      // ignore
+    }
+  }
+
+  const currentCard = flashcards[cardIndex];
+
   return (
-    <AppShell>
+    <>
       <div className="space-y-6">
         <section className="rounded-lg bg-gradient-to-br from-[#312E81] to-[#1E1B4B] p-6 text-white shadow-sm">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#FACC15]">{countdown ?? 0} days to exam</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight">{plan.subject}</h1>
-          <p className="mt-3 text-sm font-semibold text-white/76">Exam date: {formatDate(plan.examDate)}</p>
+          {plan.exam_date && <p className="mt-3 text-sm font-semibold text-white/76">Exam date: {formatDate(plan.exam_date)}</p>}
         </section>
         <div className="flex gap-2 overflow-x-auto">
-          {Array.from({ length: 14 }, (_, index) => index + 1).map((item) => (
-            <button
-              aria-pressed={day === item}
-              className={cn(
-                "min-h-20 w-24 shrink-0 rounded-lg border p-3 text-left shadow-sm transition",
-                day === item
-                  ? "border-[#FACC15] bg-[#FACC15] text-[#1E1B4B] shadow-md"
-                  : "border-slate-200 bg-white text-slate-500 hover:border-[#FACC15]/70 hover:text-[#1E1B4B]",
-              )}
-              key={item}
-              onClick={() => openDayCards(item)}
-              type="button"
-            >
-              <span className="block text-xs font-black uppercase tracking-[0.12em]">Day</span>
-              <span className="mt-1 block text-2xl font-black">{item}</span>
-              <span className="mt-1 block text-[11px] font-black uppercase tracking-[0.08em]">
-                {item <= plan.completedDays ? "Done" : "Cards"}
-              </span>
-            </button>
-          ))}
+          {Array.from({ length: plan.total_days }, (_, index) => index + 1).map((item) => {
+            const itemData = plan.daily_tasks.find((t) => t.day === item);
+            const isDone = itemData?.completed ?? false;
+            return (
+              <button
+                aria-pressed={day === item}
+                className={cn(
+                  "min-h-20 w-24 shrink-0 rounded-lg border p-3 text-left shadow-sm transition",
+                  day === item
+                    ? "border-[#FACC15] bg-[#FACC15] text-[#1E1B4B] shadow-md"
+                    : isDone
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      : "border-slate-200 bg-white text-slate-500 hover:border-[#FACC15]/70 hover:text-[#1E1B4B]",
+                )}
+                key={item}
+                onClick={() => { setDay(item); }}
+                type="button"
+              >
+                <span className="block text-xs font-black uppercase tracking-[0.12em]">Day</span>
+                <span className="mt-1 block text-2xl font-black">{item}</span>
+                <span className="mt-1 block text-[11px] font-black uppercase tracking-[0.08em]">
+                  {isDone ? "Done" : "Cards"}
+                </span>
+              </button>
+            );
+          })}
         </div>
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">Day {day}</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">Day {day} — {dayFocus}</p>
           <h2 className="mt-2 text-xl font-black">Today&apos;s tasks</h2>
           <div className="mt-4 space-y-3">
-            {planTasks(plan, day).map((task) => (
+            {tasks.length ? tasks.map((task: string) => (
               <label className="flex items-center gap-3 rounded-lg bg-[#F8FAFC] p-3 text-sm font-semibold" key={task}>
-                <input className="h-4 w-4 accent-[#FACC15]" type="checkbox" />
+                <input
+                  className="h-4 w-4 accent-[#FACC15]"
+                  type="checkbox"
+                  checked={dayData?.completed ?? false}
+                  onChange={() => toggleDayComplete(day)}
+                />
                 {task}
               </label>
-            ))}
+            )) : (
+              <p className="text-sm font-semibold text-slate-500">No tasks for this day.</p>
+            )}
           </div>
+          <button
+            className="mt-4 w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-4 py-3 text-sm font-black text-[#312E81] shadow-sm transition hover:border-[#FACC15]"
+            onClick={() => openDayCards(day)}
+            type="button"
+          >
+            Generate flashcards for Day {day}
+          </button>
         </section>
       </div>
 
@@ -1831,7 +2171,7 @@ export function PlanDetailPage({ id }: { id: string }) {
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">
                   Day {day} Flashcards
                 </p>
-                <h2 className="mt-1 text-xl font-black text-[#1E1B4B]">{plan.subject}</h2>
+                <h2 className="mt-1 text-xl font-black text-[#1E1B4B]">{dayFocus}</h2>
               </div>
               <button
                 aria-label="Close flashcards"
@@ -1842,61 +2182,78 @@ export function PlanDetailPage({ id }: { id: string }) {
                 <Icon name="x" className="h-4 w-4" />
               </button>
             </div>
-            <button
-              aria-label={cardFlipped ? "Show flashcard front" : "Show flashcard back"}
-              className={cn(
-                "mt-5 min-h-72 w-full rounded-lg border p-6 text-center shadow-sm transition",
-                cardFlipped ? "border-[#FACC15] bg-[#FEFCE8]" : "border-slate-200 bg-[#F8FAFC]",
-              )}
-              onClick={() => setCardFlipped((value) => !value)}
-              type="button"
-            >
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">
-                {cardFlipped ? "Back" : "Front"} · {cardIndex + 1}/{flashcards.length}
-              </p>
-              <p className="mt-12 text-2xl font-black leading-tight text-[#1E1B4B]">
-                {cardFlipped ? currentCard.back : currentCard.front}
-              </p>
-            </button>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <button
-                className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-[#1E1B4B] shadow-sm"
-                onClick={() => movePlanCard(-1)}
-                type="button"
-              >
-                Prev
-              </button>
-              <button
-                className="min-h-11 rounded-lg bg-[#FACC15] px-3 text-sm font-black text-[#1E1B4B] shadow-sm"
-                onClick={() => setCardFlipped((value) => !value)}
-                type="button"
-              >
-                Flip
-              </button>
-              <button
-                className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-[#1E1B4B] shadow-sm"
-                onClick={() => movePlanCard(1)}
-                type="button"
-              >
-                Next
-              </button>
-            </div>
+            {cardsLoading ? (
+              <div className="mt-5 grid min-h-72 place-items-center rounded-lg border border-slate-200 bg-[#F8FAFC]">
+                <p className="text-sm font-black text-slate-500">Generating flashcards...</p>
+              </div>
+            ) : currentCard ? (
+              <>
+                <button
+                  aria-label={cardFlipped ? "Show flashcard front" : "Show flashcard back"}
+                  className={cn(
+                    "mt-5 min-h-72 w-full rounded-lg border p-6 text-center shadow-sm transition",
+                    cardFlipped ? "border-[#FACC15] bg-[#FEFCE8]" : "border-slate-200 bg-[#F8FAFC]",
+                  )}
+                  onClick={() => setCardFlipped((value) => !value)}
+                  type="button"
+                >
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">
+                    {cardFlipped ? "Back" : "Front"} · {cardIndex + 1}/{flashcards.length}
+                  </p>
+                  <p className="mt-12 text-2xl font-black leading-tight text-[#1E1B4B]">
+                    {cardFlipped ? currentCard.back : currentCard.front}
+                  </p>
+                </button>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <button
+                    className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-[#1E1B4B] shadow-sm"
+                    onClick={() => movePlanCard(-1)}
+                    type="button"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    className="min-h-11 rounded-lg bg-[#FACC15] px-3 text-sm font-black text-[#1E1B4B] shadow-sm"
+                    onClick={() => setCardFlipped((value) => !value)}
+                    type="button"
+                  >
+                    Flip
+                  </button>
+                  <button
+                    className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-[#1E1B4B] shadow-sm"
+                    onClick={() => movePlanCard(1)}
+                    type="button"
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
+            ) : null}
           </section>
         </div>
       ) : null}
-    </AppShell>
+    </>
   );
 }
 
 export function SpacesPage() {
-  const { answers, joinedSpaces, toggleSpace } = useAppState();
+  const { answers } = useAppState();
+  const [spaces, setSpaces] = useState<BackendSpace[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const filtered = DUMMY_SPACES.filter((space) => `${space.code} ${space.title}`.toLowerCase().includes(search.toLowerCase()));
-  const joined = filtered.filter((space) => joinedSpaces.includes(space.code));
-  const discover = filtered.filter((space) => !joinedSpaces.includes(space.code));
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchSpaces()
+      .then((data) => { if (!cancelled) setSpaces(data); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const filtered = spaces.filter((s) => s.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <AppShell>
       <div className="space-y-6">
         <SectionTitle title="Class spaces" />
         {answers.major ? (
@@ -1914,74 +2271,71 @@ export function SpacesPage() {
           </section>
         ) : null}
         <input className={inputClass} onChange={(event) => setSearch(event.target.value)} placeholder="Search spaces" value={search} />
-        <SpaceSection spaces={joined} title="Joined" joinedSpaces={joinedSpaces} onToggle={toggleSpace} />
-        <SpaceSection spaces={discover} title="Discover" joinedSpaces={joinedSpaces} onToggle={toggleSpace} />
-      </div>
-    </AppShell>
-  );
-}
-
-function SpaceSection({
-  title,
-  spaces,
-  joinedSpaces,
-  onToggle,
-}: {
-  title: string;
-  spaces: Space[];
-  joinedSpaces: string[];
-  onToggle: (id: string) => void;
-}) {
-  return (
-    <section>
-      <h2 className="text-lg font-black">{title}</h2>
-      <div className="mt-3 grid gap-3 md:grid-cols-2">
-        {spaces.length ? (
-          spaces.map((space) => (
-            <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm" key={space.code}>
-              <div className="flex items-start justify-between gap-3">
-                <span className="rounded-lg px-3 py-2 text-sm font-black text-white" style={{ backgroundColor: space.color }}>{space.code}</span>
-                <button className="rounded-lg bg-[#FACC15] px-3 py-2 text-xs font-black text-[#1E1B4B]" onClick={() => onToggle(space.code)} type="button">
-                  {joinedSpaces.includes(space.code) ? "Leave" : "Join"}
-                </button>
-              </div>
-              <h3 className="mt-4 text-lg font-black">{space.title}</h3>
-              <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{space.description}</p>
-              <p className="mt-3 text-xs font-black uppercase tracking-[0.14em] text-slate-400">{space.members} members</p>
-            </article>
-          ))
+        {loading ? (
+          <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <p className="text-sm font-black text-slate-500">Loading spaces...</p>
+          </div>
+        ) : filtered.length ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {filtered.map((space) => (
+              <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm" key={space.id}>
+                <span className="rounded-lg bg-[#312E81] px-3 py-2 text-sm font-black text-white">{space.space_type}</span>
+                <h3 className="mt-4 text-lg font-black">{space.name}</h3>
+                {space.description && <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{space.description}</p>}
+                <p className="mt-3 text-xs font-black uppercase tracking-[0.14em] text-slate-400">{space.member_count} members</p>
+              </article>
+            ))}
+          </div>
         ) : (
-          <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-500">No spaces here yet.</p>
+          <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <Icon name="school" className="mx-auto text-[#312E81]" />
+            <h2 className="mt-3 text-lg font-black">No spaces yet</h2>
+            <p className="mt-2 text-sm font-semibold text-slate-500">Spaces will appear here when you or your classmates create them.</p>
+          </div>
         )}
       </div>
-    </section>
   );
 }
 
 export function ProfilePageClient() {
   const router = useRouter();
   const state = useAppState();
+  const { user, profile, isPremium, logout, refreshProfile } = useAuth();
   const profileLine = [state.answers.country, state.answers.age, state.answers.level, state.answers.subject].filter(Boolean).join(" · ");
+  const displayName = profile?.display_name || state.answers.name || "Aceley Student";
+  const displayEmail = profile?.email || user?.email || "";
+
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
 
   function resetOnboarding() {
     state.resetOnboarding();
+    logout();
     router.push("/onboarding/profile-ready");
   }
 
   function signOut() {
     state.resetOnboarding();
+    logout();
     router.replace("/landing");
   }
 
   return (
-    <AppShell>
       <div className="space-y-6">
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="grid h-20 w-20 place-items-center rounded-lg bg-[#312E81] text-2xl font-black text-white">{initials(state.answers.name)}</div>
+            <div className="grid h-20 w-20 place-items-center rounded-lg bg-[#312E81] text-2xl font-black text-white">{initials(displayName)}</div>
             <div>
-              <h1 className="text-2xl font-black">{state.answers.name || "Aceley Student"}</h1>
+              <h1 className="text-2xl font-black">{displayName}</h1>
+              {displayEmail ? <p className="mt-0.5 text-sm font-semibold text-[#312E81]">{displayEmail}</p> : null}
               <p className="mt-1 text-sm font-semibold text-slate-500">{profileLine || "Profile details not set"}</p>
+              <span className={cn(
+                "mt-2 inline-block rounded-lg px-3 py-1 text-xs font-black uppercase tracking-[0.12em]",
+                isPremium ? "bg-[#FACC15] text-[#1E1B4B]" : "bg-slate-100 text-slate-600",
+              )}>
+                {isPremium ? "Premium" : "Free plan"}
+              </span>
             </div>
           </div>
         </section>
@@ -1991,7 +2345,7 @@ export function ProfilePageClient() {
             ["Hours", state.hoursStudied],
             ["Quizzes", state.savedQuizzes.length],
           ].map(([label, value]) => (
-            <div className="rounded-lg border border-slate-200 bg-white p-4 text-center shadow-sm" key={label}>
+            <div className="rounded-lg border border-slate-200 bg-white p-4 text-center shadow-sm" key={String(label)}>
               <p className="text-2xl font-black">{value}</p>
               <p className="mt-1 text-xs font-black uppercase tracking-[0.12em] text-slate-400">{label}</p>
             </div>
@@ -2039,7 +2393,6 @@ export function ProfilePageClient() {
           ))}
         </section>
       </div>
-    </AppShell>
   );
 }
 
@@ -2065,48 +2418,84 @@ function ListSection({ title, items, empty }: { title: string; items: string[]; 
   );
 }
 
-export function QuizPage() {
+export function QuizPage({ topic: topicProp }: { topic?: string } = {}) {
   const router = useRouter();
+  const [quiz, setQuiz] = useState<{
+    id: string;
+    topic: string;
+    questions: { question: string; options: string[]; correct_index: number; explanation: string }[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
-  const current = SAMPLE_QUIZ.questions[index];
+  const resolvedTopic = topicProp || "General Knowledge";
+
+  useEffect(() => {
+    let cancelled = false;
+    generateQuiz(resolvedTopic, 5)
+      .then((data) => { if (!cancelled) setQuiz(data); })
+      .catch((err: Error) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [resolvedTopic]);
+
+  if (loading) {
+    return (
+        <div className="space-y-5">
+          <SectionTitle title="Quiz" />
+          <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <p className="text-sm font-black text-slate-500">Generating quiz on {resolvedTopic}...</p>
+          </div>
+        </div>
+    );
+  }
+
+  if (error || !quiz || !quiz.questions.length) {
+    return (
+        <div className="space-y-5">
+          <SectionTitle title="Quiz" />
+          <div className="rounded-lg border border-red-200 bg-red-50 p-5 text-center">
+            <p className="text-sm font-black text-red-700">{error || "No questions generated"}</p>
+          </div>
+          <SecondaryButton href="/">Back to home</SecondaryButton>
+        </div>
+    );
+  }
+
+  const current = quiz.questions[index];
 
   function choose(optionIndex: number) {
-    if (selected !== null) {
-      return;
-    }
-
+    if (selected !== null) return;
     setSelected(optionIndex);
-    if (optionIndex === current.answer) {
+    if (optionIndex === current.correct_index) {
       setScore((value) => value + 1);
     }
   }
 
   function next() {
-    if (index + 1 >= SAMPLE_QUIZ.questions.length) {
-      const finalScore = score + (selected === current.answer ? 1 : 0);
-      router.push(`/quiz/result?score=${finalScore}&total=${SAMPLE_QUIZ.questions.length}&title=${encodeURIComponent(SAMPLE_QUIZ.title)}`);
+    if (index + 1 >= quiz!.questions.length) {
+      const finalScore = score + (selected === current.correct_index ? 1 : 0);
+      router.push(`/quiz/result?score=${finalScore}&total=${quiz!.questions.length}&title=${encodeURIComponent(quiz!.topic)}`);
       return;
     }
-
     setIndex((value) => value + 1);
     setSelected(null);
   }
 
   return (
-    <AppShell>
       <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <SectionTitle title={SAMPLE_QUIZ.title} />
-          <span className="rounded-lg bg-white px-3 py-2 text-sm font-black shadow-sm">{index + 1}/{SAMPLE_QUIZ.questions.length}</span>
+          <SectionTitle title={quiz.topic} />
+          <span className="rounded-lg bg-white px-3 py-2 text-sm font-black shadow-sm">{index + 1}/{quiz.questions.length}</span>
         </div>
-        <ProgressBar value={(index / SAMPLE_QUIZ.questions.length) * 100} />
+        <ProgressBar value={(index / quiz.questions.length) * 100} />
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-xl font-black leading-tight">{current.question}</h2>
           <div className="mt-5 space-y-3">
-            {current.options.map((option, optionIndex) => {
-              const correct = optionIndex === current.answer;
+            {current.options.map((option: string, optionIndex: number) => {
+              const correct = optionIndex === current.correct_index;
               const chosen = selected === optionIndex;
               return (
                 <button
@@ -2128,16 +2517,15 @@ export function QuizPage() {
           </div>
           {selected !== null ? (
             <div className="mt-5 rounded-lg bg-[#FEFCE8] p-4 text-sm font-semibold text-[#1E1B4B]">
-              {selected === current.answer ? "Correct. " : "Not quite. "}
+              {selected === current.correct_index ? "Correct. " : "Not quite. "}
               {current.explanation}
             </div>
           ) : null}
         </section>
         <PrimaryButton className="w-full" disabled={selected === null} onClick={next}>
-          {index + 1 >= SAMPLE_QUIZ.questions.length ? "Finish" : "Next"}
+          {index + 1 >= quiz.questions.length ? "Finish" : "Next"}
         </PrimaryButton>
       </div>
-    </AppShell>
   );
 }
 
@@ -2150,14 +2538,13 @@ export function QuizResultPage({ score, total, title }: { score: number; total: 
     if (!recorded.current) {
       recorded.current = true;
       recordQuiz({ id: `quiz-${title}-${score}-${total}`, title, score: `${score} / ${total}` });
-      if (percent >= 80) {
-        addStrongTopic("Cell Biology");
+      if (percent >= 80 && title) {
+        addStrongTopic(title);
       }
     }
   }, [addStrongTopic, percent, recordQuiz, score, title, total]);
 
   return (
-    <AppShell>
       <div className="space-y-6 text-center">
         {percent >= 80 ? <LottieMascot className="mx-auto h-40 w-40" name="mascot_winner" /> : percent < 50 ? <LottieMascot className="mx-auto h-40 w-40" name="mascot_lost" /> : <Icon name="medal" className="mx-auto h-20 w-20 text-[#FACC15]" />}
         <div className="mx-auto grid h-44 w-44 place-items-center rounded-full bg-white shadow-sm ring-8 ring-[#FACC15]/30">
@@ -2176,47 +2563,75 @@ export function QuizResultPage({ score, total, title }: { score: number; total: 
           <SecondaryButton href="/">Back to home</SecondaryButton>
         </div>
       </div>
-    </AppShell>
   );
 }
 
-export function FlashcardsPage() {
+export function FlashcardsPage({ topic: topicProp }: { topic?: string } = {}) {
+  const [cards, setCards] = useState<{ front: string; back: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const touchStart = useRef<number | null>(null);
-  const card = SAMPLE_DECK[index];
+  const resolvedTopic = topicProp || "General Knowledge";
+
+  useEffect(() => {
+    let cancelled = false;
+    generateFlashcards(resolvedTopic, 10)
+      .then((data) => { if (!cancelled) setCards(data.cards); })
+      .catch((err: Error) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [resolvedTopic]);
+
+  if (loading) {
+    return (
+        <div className="space-y-6">
+          <SectionTitle title="Flashcards" />
+          <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <p className="text-sm font-black text-slate-500">Generating flashcards on {resolvedTopic}...</p>
+          </div>
+        </div>
+    );
+  }
+
+  if (error || !cards.length) {
+    return (
+        <div className="space-y-6">
+          <SectionTitle title="Flashcards" />
+          <div className="rounded-lg border border-red-200 bg-red-50 p-5 text-center">
+            <p className="text-sm font-black text-red-700">{error || "No flashcards generated"}</p>
+          </div>
+          <SecondaryButton href="/">Back to home</SecondaryButton>
+        </div>
+    );
+  }
+
+  const card = cards[index];
 
   function move(delta: number) {
-    setIndex((value) => (value + delta + SAMPLE_DECK.length) % SAMPLE_DECK.length);
+    setIndex((value) => (value + delta + cards.length) % cards.length);
     setFlipped(false);
   }
 
   function onTouchEnd(event: TouchEvent) {
-    if (touchStart.current === null) {
-      return;
-    }
-
+    if (touchStart.current === null) return;
     const delta = event.changedTouches[0].clientX - touchStart.current;
-    if (Math.abs(delta) > 50) {
-      move(delta < 0 ? 1 : -1);
-    }
+    if (Math.abs(delta) > 50) move(delta < 0 ? 1 : -1);
     touchStart.current = null;
   }
 
   return (
-    <AppShell>
       <div className="space-y-6">
         <SectionTitle title="Flashcards" />
         <button
           className={cn("min-h-[24rem] w-full rounded-lg border p-8 text-center shadow-lg transition", flipped ? "border-[#FACC15] bg-[#FEFCE8]" : "border-slate-200 bg-white")}
           onClick={() => setFlipped((value) => !value)}
           onTouchEnd={onTouchEnd}
-          onTouchStart={(event) => {
-            touchStart.current = event.touches[0].clientX;
-          }}
+          onTouchStart={(event) => { touchStart.current = event.touches[0].clientX; }}
           type="button"
         >
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">{flipped ? "Back" : "Front"} · {index + 1}/{SAMPLE_DECK.length}</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">{flipped ? "Back" : "Front"} · {index + 1}/{cards.length}</p>
           <p className="mt-16 text-3xl font-black leading-tight">{flipped ? card.back : card.front}</p>
         </button>
         <div className="grid grid-cols-2 gap-3">
@@ -2224,7 +2639,6 @@ export function FlashcardsPage() {
           <PrimaryButton onClick={() => move(1)}>Next</PrimaryButton>
         </div>
       </div>
-    </AppShell>
   );
 }
 
@@ -2243,7 +2657,6 @@ export function ExplainPage({ initialTopic = "", initialStyle = "lecturer" }: { 
   }
 
   return (
-    <AppShell>
       <form className="space-y-5" onSubmit={submit}>
         <SectionTitle title="Explain a topic" />
         <input className={inputClass} onChange={(event) => setTopic(event.target.value)} placeholder="Topic" value={topic} />
@@ -2262,77 +2675,106 @@ export function ExplainPage({ initialTopic = "", initialStyle = "lecturer" }: { 
         </div>
         <PrimaryButton className="w-full" disabled={!topic.trim()} type="submit">Explain it</PrimaryButton>
       </form>
-    </AppShell>
   );
 }
 
 export function ExplainResultPage({ topic, style }: { topic: string; style: string }) {
-  const result = useMemo(() => buildExplanation(topic, style), [style, topic]);
+  const [explanation, setExplanation] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const { savedExplanations, saveExplanation, removeSavedExplanation } = useAppState();
   const id = `explain-${style}-${topic}`.slice(0, 90);
   const saved = savedExplanations.some((item) => item.id === id);
 
+  useEffect(() => {
+    let cancelled = false;
+    explainTopic(topic, style)
+      .then((data) => { if (!cancelled) setExplanation(data.explanation); })
+      .catch((err: Error) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [topic, style]);
+
+  if (loading) {
+    return (
+        <div className="space-y-5">
+          <SectionTitle title={`Explaining: ${topic}`} />
+          <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <p className="text-sm font-black text-slate-500">Generating explanation...</p>
+          </div>
+        </div>
+    );
+  }
+
+  if (error) {
+    return (
+        <div className="space-y-5">
+          <SectionTitle title={`Explaining: ${topic}`} />
+          <div className="rounded-lg border border-red-200 bg-red-50 p-5 text-center">
+            <p className="text-sm font-black text-red-700">{error}</p>
+          </div>
+          <SecondaryButton href="/explain">Try again</SecondaryButton>
+        </div>
+    );
+  }
+
+  const preview = explanation.slice(0, 120);
+
   return (
-    <AppShell>
       <div className="space-y-5">
         <div className="flex items-start justify-between gap-4">
-          <SectionTitle title={result.title} />
+          <SectionTitle title={`${topic} (${style})`} />
           <button
             className={cn("grid h-11 w-11 place-items-center rounded-lg border shadow-sm", saved ? "border-[#FACC15] bg-[#FACC15]" : "border-slate-200 bg-white")}
-            onClick={() => (saved ? removeSavedExplanation(id) : saveExplanation({ id, topic, style, preview: result.preview }))}
+            onClick={() => (saved ? removeSavedExplanation(id) : saveExplanation({ id, topic, style, preview }))}
             type="button"
           >
             <Icon name="bookmark" className="h-4 w-4" />
           </button>
         </div>
-        <ResultBlock label="Summary">{result.summary}</ResultBlock>
-        {result.sections.map((section) => (
-          <ResultBlock label={section.heading} key={section.heading}>{section.body}</ResultBlock>
-        ))}
+        <ResultBlock label="Explanation">
+          <span className="whitespace-pre-wrap">{explanation}</span>
+        </ResultBlock>
       </div>
-    </AppShell>
   );
 }
 
 export function ProgressPage() {
-  const state = useAppState();
-  const hasAny = state.savedQuizzes.length || state.askHistory.length || state.studySessions.length;
+  const [progress, setProgress] = useState<BackendProgress | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!hasAny) {
+  useEffect(() => {
+    let cancelled = false;
+    fetchProgress()
+      .then((data) => { if (!cancelled) setProgress(data); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading) {
     return (
-      <AppShell>
+        <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-sm font-black text-slate-500">Loading progress...</p>
+        </div>
+    );
+  }
+
+  if (!progress || (!progress.quizzes_taken && !progress.flashcards_reviewed && !progress.streak_days)) {
+    return (
         <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
           <Icon name="progress" className="mx-auto text-[#312E81]" />
           <h1 className="mt-3 text-xl font-black">No progress yet</h1>
           <p className="mt-2 text-sm font-semibold text-slate-500">Finish a quiz, ask a question, or complete a focus session to see your stats.</p>
           <PrimaryButton href="/quiz" className="mt-5">Start a quiz</PrimaryButton>
         </div>
-      </AppShell>
     );
   }
 
-  const answered = state.askHistory.length;
-  const quizScores = state.savedQuizzes
-    .map((quiz) => {
-      const [score, total] = quiz.score.split("/").map((part) => Number(part.trim()));
-      return Number.isFinite(score) && Number.isFinite(total) && total ? score / total : 0;
-    })
-    .filter(Boolean);
-  const correctRate = quizScores.length ? Math.round((quizScores.reduce((sum, item) => sum + item, 0) / quizScores.length) * 100) : 0;
-  const readiness = Math.min(100, Math.round(correctRate * 0.55 + Math.min(state.hoursStudied * 8, 30) + Math.min(answered * 3, 15)));
-  const bars = Array.from({ length: 7 }, (_, index) => {
-    const day = new Date();
-    day.setDate(day.getDate() - (6 - index));
-    const key = day.toISOString().slice(0, 10);
-    return state.studySessions
-      .filter((session) => session.endedAt.slice(0, 10) === key)
-      .reduce((sum, session) => sum + session.minutes, 0);
-  });
-  const maxBar = Math.max(30, ...bars);
-  const topics = [...state.strongTopics, ...state.answers.weakTopics].slice(0, 6);
+  const avgPercent = Math.round(progress.average_score * 100);
+  const readiness = Math.min(100, Math.round(avgPercent * 0.6 + Math.min(progress.quizzes_taken * 5, 25) + Math.min(progress.streak_days * 5, 15)));
 
   return (
-    <AppShell>
       <div className="space-y-6">
         <section className="rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">Exam readiness</p>
@@ -2340,47 +2782,29 @@ export function ProgressPage() {
         </section>
         <div className="grid grid-cols-2 gap-3">
           {[
-            ["Questions answered", answered],
-            ["Correct rate", `${correctRate}%`],
-            ["Hours studied", state.hoursStudied],
-            ["Streak", state.streak],
+            ["Quizzes taken", progress.quizzes_taken],
+            ["Avg score", `${avgPercent}%`],
+            ["Flashcards reviewed", progress.flashcards_reviewed],
+            ["Streak", `${progress.streak_days}d`],
           ].map(([label, value]) => (
-            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" key={label}>
+            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" key={String(label)}>
               <p className="text-2xl font-black">{value}</p>
               <p className="mt-1 text-xs font-black uppercase tracking-[0.12em] text-slate-400">{label}</p>
             </div>
           ))}
         </div>
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-black">Weekly study</h2>
-          <div className="mt-5 flex h-40 items-end gap-2">
-            {bars.map((minutes, index) => (
-              <div className="flex flex-1 flex-col items-center gap-2" key={index}>
-                <div className="w-full rounded-t-lg bg-[#FACC15]" style={{ height: `${Math.max(8, (minutes / maxBar) * 100)}%` }} />
-                <span className="text-[10px] font-black text-slate-400">{minutes}m</span>
-              </div>
-            ))}
-          </div>
-        </section>
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-black">Topic mastery</h2>
-          <div className="mt-4 space-y-3">
-            {topics.length ? (
-              topics.map((topic, index) => (
-                <div key={topic}>
-                  <div className="mb-2 flex justify-between text-sm font-black">
-                    <span>{topic}</span>
-                    <span>{index < state.strongTopics.length ? "Strong" : "Needs work"}</span>
-                  </div>
-                  <ProgressBar value={index < state.strongTopics.length ? 86 : 42} />
-                </div>
+          <h2 className="text-lg font-black">Topics studied</h2>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {progress.topics_studied.length ? (
+              progress.topics_studied.map((topic: string) => (
+                <span className="rounded-lg bg-[#FEFCE8] px-3 py-2 text-xs font-black text-[#CA8A04]" key={topic}>{topic}</span>
               ))
             ) : (
-              <p className="text-sm font-semibold text-slate-500">Mastery rows will appear as you save explanations and finish quizzes.</p>
+              <p className="text-sm font-semibold text-slate-500">Topics will appear as you take quizzes and review flashcards.</p>
             )}
           </div>
         </section>
       </div>
-    </AppShell>
   );
 }

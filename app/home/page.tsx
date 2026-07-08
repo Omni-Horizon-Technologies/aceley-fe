@@ -1,12 +1,12 @@
 "use client";
 
 import { AppLayout } from "@/app/components/app-layout";
-import { ProfilePageClient } from "@/app/components/aceley-pages";
+import { HomePage } from "@/app/components/aceley-pages";
 
 export default function Page() {
   return (
     <AppLayout>
-      <ProfilePageClient />
+      <HomePage />
     </AppLayout>
   );
 }

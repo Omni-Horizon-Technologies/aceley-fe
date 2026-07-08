@@ -1,3 +1,4 @@
+import { AppLayout } from "@/app/components/app-layout";
 import { QuizResultPage } from "@/app/components/aceley-pages";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -12,10 +13,12 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   const total = Number(stringParam(params.total, "5"));
 
   return (
-    <QuizResultPage
-      score={Number.isFinite(score) ? score : 0}
-      title={stringParam(params.title, "Cell Biology Check")}
-      total={Number.isFinite(total) ? total : 5}
-    />
+    <AppLayout>
+      <QuizResultPage
+        score={Number.isFinite(score) ? score : 0}
+        title={stringParam(params.title, "Cell Biology Check")}
+        total={Number.isFinite(total) ? total : 5}
+      />
+    </AppLayout>
   );
 }
