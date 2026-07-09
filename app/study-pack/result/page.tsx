@@ -1,15 +1,22 @@
 "use client";
 
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/app/components/app-layout";
 import { StudyPackResultPage } from "@/app/components/aceley-pages";
 
-export default function Page() {
-  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+function StudyPackResultWithParams() {
+  const params = useSearchParams();
   const source = params.get("source") || "Study material";
+  return <StudyPackResultPage source={source} />;
+}
 
+export default function Page() {
   return (
     <AppLayout>
-      <StudyPackResultPage source={source} />
+      <Suspense fallback={null}>
+        <StudyPackResultWithParams />
+      </Suspense>
     </AppLayout>
   );
 }

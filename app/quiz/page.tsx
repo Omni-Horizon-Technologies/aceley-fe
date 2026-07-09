@@ -1,15 +1,22 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/app/components/app-layout";
 import { QuizPage } from "@/app/components/aceley-pages";
 
-export default function Page() {
+function QuizPageWithParams() {
   const searchParams = useSearchParams();
   const topic = searchParams.get("topic") || undefined;
+  return <QuizPage topic={topic} />;
+}
+
+export default function Page() {
   return (
     <AppLayout>
-      <QuizPage topic={topic} />
+      <Suspense fallback={<QuizPage />}>
+        <QuizPageWithParams />
+      </Suspense>
     </AppLayout>
   );
 }

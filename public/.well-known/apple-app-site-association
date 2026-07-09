@@ -1,0 +1,1 @@
+{"applinks":{"apps":[],"details":[{"appID":"2TUC9Y9TM3.com.omnihorizon.aceley","appIDs":["2TUC9Y9TM3.com.omnihorizon.aceley"],"paths":["/auth/verify-link","/auth/verify-link*"],"components":[{"/":"/auth/verify-link","?":{"token":"?*"},"comment":"Magic link"}]}]}}
