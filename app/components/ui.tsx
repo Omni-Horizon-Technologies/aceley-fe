@@ -349,7 +349,7 @@ export function Icon({
   );
 }
 
-const brandLogoSrc = "/images%20/files/profile%20p.jpeg";
+const brandLogoSrc = "/icons/icon-192.png";
 
 export function BrandMark({ tone = "light" }: { tone?: "light" | "dark" }) {
   return (

@@ -148,7 +148,7 @@ export default function ConversationDetailPage() {
           {messages.map((message) => (
             <div className={cn("flex gap-3", message.role === "student" && "justify-end")} key={message.id}>
               {message.role === "tutor" ? (
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#FACC15] text-sm font-black">A</span>
+                <img alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" src="/icons/icon-192.png" />
               ) : null}
               <div
                 className={cn(

@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { BrandMark, Icon, PrimaryButton, cn } from "@/app/components/ui";
+import { Icon, PrimaryButton, cn } from "@/app/components/ui";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
@@ -46,10 +46,6 @@ export default function SignInPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#F8FAFC] px-4 py-10">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-4">
-          <BrandMark />
-        </div>
-
         {status === "sent" ? (
           <div className="rounded-lg border border-slate-200 bg-white p-6 text-center shadow-lg shadow-[#1E1B4B]/8">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-100 text-emerald-600">

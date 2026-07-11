@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { BackButton } from "@/app/components/back-button";
 import { AuthForm } from "@/app/components/auth-form";
-import { BrandMark, Icon, PrimaryButton } from "@/app/components/ui";
+import { Icon, PrimaryButton } from "@/app/components/ui";
 import { useAppState } from "@/lib/state";
 import { useAuth } from "@/lib/auth";
 
@@ -15,10 +14,6 @@ export default function AuthPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#F8FAFC] px-4 py-10">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-4">
-          <BrandMark />
-        </div>
-
         {!hydrated ? (
           <div className="h-48 animate-pulse rounded-xl bg-slate-100" />
         ) : isLoggedIn ? (
@@ -34,17 +29,17 @@ export default function AuthPage() {
           </div>
         ) : (
           <>
-            <h1 className="text-center text-2xl font-black tracking-tight text-[#1E1B4B]">Welcome back</h1>
-            <p className="mt-2 text-center text-sm text-slate-500">
-              Sign in to pick up where you left off.
+            <h1 className="text-center text-3xl font-black tracking-tight text-[#1E1B4B]">Welcome back</h1>
+            <p className="mx-auto mt-2 max-w-xs text-center text-sm font-semibold text-slate-500">
+              Pick up your streak and finish exam prep faster.
             </p>
             <div className="mt-6">
               <AuthForm />
             </div>
-            <p className="mt-5 text-center text-sm text-slate-500">
-              New to Aceley?{" "}
-              <Link className="font-bold text-[#312E81] hover:text-[#CA8A04]" href="/onboarding/profile-ready">
-                Create an account
+            <p className="mt-5 text-center text-sm font-semibold text-slate-500">
+              Don&rsquo;t have an account?{" "}
+              <Link className="font-black text-[#312E81] transition hover:text-[#CA8A04]" href="/onboarding/profile-ready">
+                Sign up
               </Link>
             </p>
           </>

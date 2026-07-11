@@ -64,7 +64,7 @@ import {
   type ThemePreference,
 } from "@/lib/state";
 import { useAuth } from "@/lib/auth";
-import { useGoogleLogin } from "@react-oauth/google";
+import { AuthForm } from "@/app/components/auth-form";
 import { HydrationGate } from "@/app/components/hydration-gate";
 
 const inputClass =
@@ -117,10 +117,12 @@ function OnboardingShell({
     <HydrationGate>
       <main className="min-h-screen bg-[#F8FAFC] px-4 py-6 text-[#1E1B4B] sm:px-6">
         <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-md flex-col">
-          <div className="flex items-center justify-between">
-            {backHref ? <BackButton fallbackHref={backHref} /> : <BrandMark />}
-            {step ? <span className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">{step}</span> : null}
-          </div>
+          {backHref || step ? (
+            <div className="flex items-center justify-between">
+              {backHref ? <BackButton fallbackHref={backHref} /> : <span />}
+              {step ? <span className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">{step}</span> : null}
+            </div>
+          ) : null}
           <section className="flex flex-1 flex-col justify-center py-8">{children}</section>
         </div>
       </main>
@@ -159,85 +161,28 @@ function SectionTitle({ eyebrow, title }: { eyebrow?: string; title: string }) {
 }
 
 export function OnboardingProfileReadyPage() {
-  const router = useRouter();
-  const { hydrated, onboarded, updateAnswers, completeOnboarding } = useAppState();
-  const { loginWithAccessToken } = useAuth();
-  const [error, setError] = useState("");
-
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      const success = await loginWithAccessToken(tokenResponse.access_token);
-      if (success) {
-        // Pre-fill the name field from Google account
-        try {
-          const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-          });
-          const info = await res.json();
-          if (info.name) {
-            updateAnswers({ name: info.name });
-          }
-        } catch {
-          // ignore
-        }
-
-        // Returning user — backend profile already exists, skip onboarding
-        // We need to re-read auth state since loginWithAccessToken updated it
-        const raw = localStorage.getItem("aceley:v1:auth");
-        const hasProfile = raw && JSON.parse(raw).profile;
-        if (hasProfile) {
-          completeOnboarding();
-          router.push("/home");
-        } else {
-          router.push("/onboarding/name");
-        }
-      } else {
-        setError("Sign-in failed. Please try again.");
-      }
-    },
-    onError: () => {
-      setError("Google sign-in was cancelled.");
-    },
-  });
-
   return (
     <OnboardingShell>
       <div className="text-center">
-        <LottieMascot
-          className="mx-auto h-[300px] w-[300px]"
-          name="mascot_celebrate"
-          sizeLabel="Aceley celebrating mascot"
-        />
-        <div className="mt-2 flex justify-center">
-          <BrandMark />
-        </div>
-        <p className="mt-3 text-base font-semibold text-slate-600">Become exam-ready, your way.</p>
+        <h1 className="text-3xl font-black tracking-tight text-[#1E1B4B]">Welcome to Aceley</h1>
+        <p className="mx-auto mt-2 max-w-xs text-center text-sm font-semibold text-slate-500">
+          Snap notes, run flashcards, and ace exams faster.
+        </p>
       </div>
-      <div className="mt-9 space-y-3">
-        <button
-          className="flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:border-[#FACC15]/70"
-          onClick={() => { setError(""); googleLogin(); }}
-          type="button"
-        >
-          <Icon name="google" />
-          Continue with Google
-        </button>
+      <div className="mt-6">
+        <AuthForm mode="signup" />
       </div>
-      {error ? (
-        <p className="mt-4 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{error}</p>
-      ) : null}
-      <p className="mt-7 text-center text-xs leading-5 text-slate-500">
-        By continuing, you accept Aceley&apos;s <span className="font-bold text-[#312E81]">Terms</span> /{" "}
+      <p className="mt-5 text-center text-xs leading-5 text-slate-500">
+        By continuing, you accept Aceley&apos;s{" "}
+        <span className="font-bold text-[#312E81]">Terms</span> /{" "}
         <span className="font-bold text-[#312E81]">Privacy</span>
       </p>
-      {hydrated && !onboarded ? (
-        <p className="mt-4 text-center text-sm font-semibold text-slate-600">
-          Already have an account?{" "}
-          <Link className="font-black text-[#312E81] transition hover:text-[#CA8A04]" href="/auth">
-            Log in
-          </Link>
-        </p>
-      ) : null}
+      <p className="mt-4 text-center text-sm font-semibold text-slate-500">
+        Already have an account?{" "}
+        <Link className="font-black text-[#312E81] transition hover:text-[#CA8A04]" href="/auth">
+          Log in
+        </Link>
+      </p>
     </OnboardingShell>
   );
 }
@@ -954,7 +899,7 @@ export function TutorPage() {
           {messages.map((message) => (
             <div className={cn("flex gap-3", message.role === "student" && "justify-end")} key={message.id}>
               {message.role === "tutor" ? (
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#FACC15] text-sm font-black">A</span>
+                <img alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" src="/icons/icon-192.png" />
               ) : null}
               <div
                 className={cn(

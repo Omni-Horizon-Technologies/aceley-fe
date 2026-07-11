@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BrandMark, Icon, PrimaryButton } from "@/app/components/ui";
+import { Icon, PrimaryButton } from "@/app/components/ui";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
@@ -103,9 +103,6 @@ export default function VerifyLinkPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#F8FAFC] px-4 py-10">
       <div className="w-full max-w-sm text-center">
-        <div className="mb-8 flex flex-col items-center gap-4">
-          <BrandMark />
-        </div>
         <Suspense fallback={<VerifyingCard />}>
           <VerifyLinkClient />
         </Suspense>
