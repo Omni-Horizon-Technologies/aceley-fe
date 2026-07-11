@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo } from "react";
 import { AppLayout } from "@/app/components/app-layout";
 import {
   DeckCard,
@@ -10,8 +13,30 @@ import {
   SecondaryButton,
 } from "@/app/components/ui";
 import { decks } from "@/app/lib/data";
+import { useAuth } from "@/services/hooks/useAuth";
+import type { Profile } from "@/services/dtos/auth";
+
+function greetingForHour(hour: number): string {
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function displayName(profile: Profile | null): string {
+  if (!profile) return "there";
+  if (profile.nickname && profile.nickname.trim()) return profile.nickname;
+  const local = profile.email.split("@")[0];
+  return local || "there";
+}
 
 export default function DashboardPage() {
+  const { profile, hasHydrated } = useAuth();
+
+  const title = useMemo(() => {
+    if (!hasHydrated) return "Welcome back";
+    return `${greetingForHour(new Date().getHours())}, ${displayName(profile)}`;
+  }, [profile, hasHydrated]);
+
   return (
     <AppLayout>
       <div className="space-y-8">
@@ -24,7 +49,7 @@ export default function DashboardPage() {
           }
           description="Pick up your latest deck or create new flashcards from today's notes."
           eyebrow="Dashboard"
-          title="Good morning, Maya"
+          title={title}
         />
 
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm md:p-6">

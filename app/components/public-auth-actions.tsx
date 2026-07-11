@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { AuthForm } from "@/app/components/auth-form";
 import { Icon, PrimaryButton, SecondaryButton, cn } from "@/app/components/ui";
-import { useAppState } from "@/lib/state";
-import { useAuth } from "@/lib/auth";
+import { useAuthStore } from "@/services/context/auth";
 
-const signupHref = "/onboarding/profile-ready";
+const signupHref = "/sign-up";
 const loginHref = "/auth";
-const appHref = "/home";
+const appHref = "/dashboard";
 
 type Tone = "dark" | "light";
 type Variant = "header" | "hero" | "stack";
@@ -72,9 +71,8 @@ export function PublicAuthActions({
   variant?: Variant;
   className?: string;
 }) {
-  const { hydrated, onboarded } = useAppState();
-  const { isAuthenticated } = useAuth();
-  const isLoggedIn = onboarded && isAuthenticated;
+  const hydrated = useAuthStore((s) => s.hasHydrated);
+  const isLoggedIn = useAuthStore((s) => s.isAuthenticated);
   const wrapperClass =
     variant === "header"
       ? "flex shrink-0 items-center gap-2 sm:gap-3"
@@ -93,7 +91,7 @@ export function PublicAuthActions({
           className={cn(primaryClass(tone, variant), variant === "hero" && "w-full max-w-xs flex-none")}
           href={appHref}
         >
-          Open app
+          Dashboard
         </Link>
       </div>
     );
@@ -116,8 +114,8 @@ export function PublicAuthFooterLinks({
 }: {
   linkClassName: string;
 }) {
-  const { hydrated, onboarded } = useAppState();
-  const { isAuthenticated } = useAuth();
+  const hydrated = useAuthStore((s) => s.hasHydrated);
+  const isLoggedIn = useAuthStore((s) => s.isAuthenticated);
 
   if (!hydrated) {
     return (
@@ -127,11 +125,11 @@ export function PublicAuthFooterLinks({
     );
   }
 
-  if (onboarded && isAuthenticated) {
+  if (isLoggedIn) {
     return (
       <li>
         <Link className={linkClassName} href={appHref}>
-          Open app
+          Dashboard
         </Link>
       </li>
     );
@@ -156,7 +154,7 @@ export function PublicAuthFooterLinks({
 export function PublicPrimaryCta({
   tone = "dark",
   label,
-  loggedInLabel = "Open app",
+  loggedInLabel = "Dashboard",
   className,
   size = "md",
   withArrow = false,
@@ -170,9 +168,8 @@ export function PublicPrimaryCta({
   withArrow?: boolean;
   variant?: "solid" | "shine" | "dark";
 }) {
-  const { hydrated, onboarded } = useAppState();
-  const { isAuthenticated } = useAuth();
-  const isLoggedIn = onboarded && isAuthenticated;
+  const hydrated = useAuthStore((s) => s.hasHydrated);
+  const isLoggedIn = useAuthStore((s) => s.isAuthenticated);
 
   const sizeClass =
     size === "sm"
@@ -243,16 +240,15 @@ export function PricingPlanCta({
   cta: string;
   highlighted?: boolean;
 }) {
-  const { hydrated, onboarded } = useAppState();
-  const { isAuthenticated } = useAuth();
-  const isLoggedIn = onboarded && isAuthenticated;
+  const hydrated = useAuthStore((s) => s.hasHydrated);
+  const isLoggedIn = useAuthStore((s) => s.isAuthenticated);
   const isSignup = href === signupHref;
   if (isSignup && !hydrated) {
     return <div aria-hidden="true" className="h-11 w-full rounded-lg bg-slate-100" />;
   }
 
   const resolvedHref = hydrated && isLoggedIn && isSignup ? appHref : href;
-  const resolvedCta = hydrated && isLoggedIn && isSignup ? "Open app" : cta;
+  const resolvedCta = hydrated && isLoggedIn && isSignup ? "Dashboard" : cta;
 
   if (highlighted) {
     return (
@@ -273,14 +269,14 @@ export function PricingPlanCta({
 }
 
 export function AuthPageEntry() {
-  const { hydrated, onboarded } = useAppState();
-  const { isAuthenticated } = useAuth();
+  const hydrated = useAuthStore((s) => s.hasHydrated);
+  const isLoggedIn = useAuthStore((s) => s.isAuthenticated);
 
   if (!hydrated) {
     return <div className="h-[28rem] rounded-lg border border-slate-200 bg-white shadow-lg shadow-[#1E1B4B]/8" />;
   }
 
-  if (onboarded && isAuthenticated) {
+  if (isLoggedIn) {
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-6 text-center shadow-lg shadow-[#1E1B4B]/8">
         <span className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-[#312E81]/10 text-[#312E81]">
@@ -291,7 +287,7 @@ export function AuthPageEntry() {
           Continue to your Aceley workspace to pick up your study plan.
         </p>
         <PrimaryButton href={appHref} className="mt-6 w-full">
-          Open app
+          Dashboard
         </PrimaryButton>
       </div>
     );

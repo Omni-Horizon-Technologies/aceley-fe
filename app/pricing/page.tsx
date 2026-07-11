@@ -41,7 +41,7 @@ const plans: PricingPlan[] = [
       "Standard Support",
     ],
     cta: "Sign up free",
-    href: "/onboarding/profile-ready",
+    href: "/sign-up",
   },
   {
     name: "Student Pro",

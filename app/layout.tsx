@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full antialiased ${outfit.variable}`} data-scroll-behavior="smooth">
+    <html lang="en" className={`h-full antialiased ${outfit.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="flex min-h-full flex-col">
         <Providers>{children}</Providers>
       </body>

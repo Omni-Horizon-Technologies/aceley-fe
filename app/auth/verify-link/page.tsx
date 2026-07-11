@@ -3,8 +3,9 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon, PrimaryButton } from "@/app/components/ui";
-
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+import { useAuth } from "@/services/hooks/useAuth";
+import { nextOnboardingStep, verifyMagicLink } from "@/services/modules/auth";
+import { ApiError } from "@/services/apiClient";
 
 type Status = "verifying" | "error";
 
@@ -28,6 +29,7 @@ function VerifyLinkClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const { applySignIn } = useAuth();
   const [status, setStatus] = useState<Status>("verifying");
   const [errorMessage, setErrorMessage] = useState("");
   const startedRef = useRef(false);
@@ -43,41 +45,19 @@ function VerifyLinkClient() {
 
     (async () => {
       try {
-        const verifyRes = await fetch(`${API_URL}/api/v1/auth/email/verify-link`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token }),
-        });
-        if (!verifyRes.ok) {
-          throw new Error(`verify_failed_${verifyRes.status}`);
-        }
-        const data = (await verifyRes.json()) as {
-          access_token?: string;
-          refresh_token?: string;
-        };
-        if (!data.access_token || !data.refresh_token) {
-          throw new Error("verify_missing_tokens");
-        }
-
-        const sessionRes = await fetch("/api/session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            access_token: data.access_token,
-            refresh_token: data.refresh_token,
-          }),
-        });
-        if (!sessionRes.ok) {
-          throw new Error("session_failed");
-        }
-
-        router.replace("/dashboard");
-      } catch {
+        const response = await verifyMagicLink(token);
+        applySignIn(response);
+        router.replace(nextOnboardingStep(response.profile));
+      } catch (err) {
         setStatus("error");
-        setErrorMessage("Your sign-in link is invalid or has expired.");
+        if (err instanceof ApiError && typeof err.data === "object" && err.data !== null && "detail" in err.data) {
+          setErrorMessage(String((err.data as { detail: unknown }).detail));
+        } else {
+          setErrorMessage("Your sign-in link is invalid or has expired.");
+        }
       }
     })();
-  }, [router, token]);
+  }, [router, token, applySignIn]);
 
   if (status === "verifying") {
     return <VerifyingCard />;

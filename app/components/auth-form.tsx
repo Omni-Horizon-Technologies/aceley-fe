@@ -1,19 +1,64 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { useGoogleLogin } from "@react-oauth/google";
+import Script from "next/script";
+import { GoogleLogin } from "@react-oauth/google";
 import { Icon, cn } from "@/app/components/ui";
+import { AppleIcon, GoogleIcon } from "@/app/components/icons/icons";
 import { isGoogleAuthConfigured } from "@/app/providers";
-import { useAuth } from "@/lib/auth";
-import { useAppState } from "@/lib/state";
+import { useAuth } from "@/services/hooks/useAuth";
+import {
+  nextOnboardingStep,
+  requestMagicLink,
+  signInWithApple,
+  signInWithGoogle,
+} from "@/services/modules/auth";
+import { ApiError } from "@/services/apiClient";
+import type { AppleUserInfo, SignInResponse } from "@/services/dtos/auth";
 
-const MAGIC_API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+type Status =
+  | "idle"
+  | "google-loading"
+  | "apple-loading"
+  | "email-loading"
+  | "email-sent"
+  | "error";
 
-type Status = "idle" | "google-loading" | "email-loading" | "email-sent" | "error";
+const APPLE_SDK_SRC =
+  "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js";
+
+const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID ?? "";
+const APPLE_REDIRECT_URI =
+  typeof window !== "undefined"
+    ? `${window.location.origin}/auth/apple-callback`
+    : "https://www.tryaceley.com/auth/apple-callback";
+
+const isAppleConfigured = APPLE_SERVICE_ID.length > 0;
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+type AppleIDNamespace = {
+  auth: {
+    init: (opts: {
+      clientId: string;
+      scope: string;
+      redirectURI: string;
+      usePopup: boolean;
+    }) => void;
+    signIn: () => Promise<{
+      authorization: { id_token: string; code: string; state?: string };
+      user?: { name?: { firstName?: string; lastName?: string }; email?: string };
+    }>;
+  };
+};
+
+declare global {
+  interface Window {
+    AppleID?: AppleIDNamespace;
+  }
 }
 
 export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
@@ -22,59 +67,104 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
   const [email, setEmail] = useState("");
   const [sentToEmail, setSentToEmail] = useState("");
   const router = useRouter();
-  const { loginWithAccessToken, createBackendProfile } = useAuth();
-  const { completeOnboarding, updateAnswers } = useAppState();
+  const { applySignIn } = useAuth();
+  const appleReady = useRef(false);
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
+  const routeAfterSignIn = useCallback(
+    (response: SignInResponse) => {
+      applySignIn(response);
+      router.push(nextOnboardingStep(response.profile));
+    },
+    [applySignIn, router],
+  );
+
+  const initApple = useCallback(() => {
+    if (appleReady.current) return;
+    if (typeof window === "undefined" || !window.AppleID) return;
+    window.AppleID.auth.init({
+      clientId: APPLE_SERVICE_ID,
+      scope: "name email",
+      redirectURI: APPLE_REDIRECT_URI,
+      usePopup: true,
+    });
+    appleReady.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (isAppleConfigured) initApple();
+  }, [initApple]);
+
+  const isLoading =
+    status === "google-loading" ||
+    status === "apple-loading" ||
+    status === "email-loading";
+
+  const handleGoogleIdToken = useCallback(
+    async (idToken: string) => {
       setStatus("google-loading");
-      const success = await loginWithAccessToken(tokenResponse.access_token);
-      if (!success) {
+      setErrorMessage("");
+      try {
+        const response = await signInWithGoogle({ idToken });
+        routeAfterSignIn(response);
+      } catch (err) {
         setStatus("error");
-        setErrorMessage("Google sign-in failed. Please try again.");
-        return;
+        setErrorMessage(
+          err instanceof ApiError
+            ? "Google sign-in failed. Please try again."
+            : "Couldn’t reach the server. Check your connection and try again.",
+        );
       }
-
-      let userName = "";
-      try {
-        const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
-        const info = await res.json();
-        userName = info.name || info.email || "";
-        updateAnswers({ name: userName });
-      } catch {
-        // best-effort
-      }
-
-      // Signup: if this is a genuinely new user (no backend profile),
-      // continue into onboarding instead of jumping to /home.
-      if (mode === "signup") {
-        const raw = typeof window !== "undefined" ? window.localStorage.getItem("aceley:v1:auth") : null;
-        const hasProfile = raw ? Boolean(JSON.parse(raw).profile) : false;
-        if (!hasProfile) {
-          router.push("/onboarding/name");
-          return;
-        }
-      }
-
-      try {
-        await createBackendProfile({
-          display_name: userName,
-          role: "student",
-        });
-      } catch {
-        // best-effort
-      }
-
-      completeOnboarding();
-      router.push("/home");
     },
-    onError: () => {
+    [routeAfterSignIn],
+  );
+
+  async function handleAppleClick() {
+    if (!isAppleConfigured) {
       setStatus("error");
-      setErrorMessage("Google sign-in was cancelled.");
-    },
-  });
+      setErrorMessage(
+        "Apple sign-in isn’t configured. Set NEXT_PUBLIC_APPLE_SERVICE_ID in .env.local and restart the dev server.",
+      );
+      return;
+    }
+    initApple();
+    if (typeof window === "undefined" || !window.AppleID) {
+      setStatus("error");
+      setErrorMessage("Apple sign-in is still loading. Try again in a moment.");
+      return;
+    }
+    setStatus("apple-loading");
+    setErrorMessage("");
+    try {
+      const result = await window.AppleID.auth.signIn();
+      const appleUser: AppleUserInfo | undefined = result.user?.name
+        ? {
+            first_name: result.user.name.firstName,
+            last_name: result.user.name.lastName,
+          }
+        : undefined;
+      const response = await signInWithApple({
+        idToken: result.authorization.id_token,
+        user: appleUser,
+      });
+      routeAfterSignIn(response);
+    } catch (err) {
+      // Apple errors on unregistered origins (e.g. localhost) — surface a
+      // friendly message instead of silently returning to idle.
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[apple-signin]", err);
+      if (err instanceof ApiError) {
+        setStatus("error");
+        setErrorMessage("Apple sign-in failed. Please try again.");
+      } else if (message.includes("popup_closed_by_user") || message.includes("user_cancelled_authorize")) {
+        setStatus("idle");
+      } else {
+        setStatus("error");
+        setErrorMessage(
+          "Apple sign-in isn’t available on this domain. It only works on tryaceley.com — use Google or magic link on localhost.",
+        );
+      }
+    }
+  }
 
   async function handleMagicLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -87,14 +177,7 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
     setStatus("email-loading");
     setErrorMessage("");
     try {
-      const res = await fetch(`${MAGIC_API_URL}/api/v1/auth/email/request-link`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed }),
-      });
-      if (res.status !== 202 && !res.ok) {
-        throw new Error(`Request failed (${res.status})`);
-      }
+      await requestMagicLink(trimmed);
       setSentToEmail(trimmed);
       setStatus("email-sent");
     } catch {
@@ -102,8 +185,6 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
       setErrorMessage("We couldn’t send your link. Please try again.");
     }
   }
-
-  const isLoading = status === "google-loading" || status === "email-loading";
 
   if (status === "email-sent") {
     return (
@@ -135,40 +216,80 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
 
   return (
     <div>
-      {/* Google */}
-      <button
-        className="flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition hover:bg-slate-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/20 disabled:opacity-50"
-        disabled={isLoading}
-        onClick={() => {
-          if (!isGoogleAuthConfigured) {
+      {isAppleConfigured ? (
+        <Script src={APPLE_SDK_SRC} strategy="afterInteractive" onLoad={initApple} />
+      ) : null}
+
+      {/* Google — our styled button overlays the real Google button which
+          catches the click, opens Google's popup, and returns the id_token. */}
+      {isGoogleAuthConfigured ? (
+        <div className="relative min-h-12 w-full">
+          <div
+            aria-hidden="true"
+            className={cn(
+              "pointer-events-none flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
+              isLoading && "opacity-50",
+            )}
+          >
+            <GoogleIcon />
+            {status === "google-loading"
+              ? "Signing in…"
+              : mode === "signup"
+                ? "Sign up with Google"
+                : "Continue with Google"}
+          </div>
+          <div
+            className="absolute inset-0 flex items-center justify-center overflow-hidden opacity-0"
+            style={{ colorScheme: "light" }}
+          >
+            <GoogleLogin
+              onSuccess={(credentialResponse) => {
+                if (credentialResponse.credential) {
+                  void handleGoogleIdToken(credentialResponse.credential);
+                } else {
+                  setStatus("error");
+                  setErrorMessage("Google didn’t return a credential. Try again.");
+                }
+              }}
+              onError={() => {
+                setStatus("error");
+                setErrorMessage("Google sign-in was cancelled.");
+              }}
+              text={mode === "signup" ? "signup_with" : "continue_with"}
+              shape="rectangular"
+              theme="outline"
+              size="large"
+              width="400"
+              logo_alignment="left"
+            />
+          </div>
+        </div>
+      ) : (
+        <button
+          className="flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition hover:bg-slate-50 disabled:opacity-50"
+          disabled={isLoading}
+          onClick={() => {
             setStatus("error");
             setErrorMessage(
-              "Google sign-in isn’t configured. Set NEXT_PUBLIC_GOOGLE_CLIENT_ID in .env.local and restart the dev server.",
+              "Google sign-in isn’t configured. Set NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID in .env.local and restart the dev server.",
             );
-            return;
-          }
-          setStatus("idle");
-          setErrorMessage("");
-          googleLogin();
-        }}
-        type="button"
-      >
-        <Icon name="google" />
-        {status === "google-loading" ? "Signing in…" : "Continue with Google"}
-      </button>
+          }}
+          type="button"
+        >
+          <GoogleIcon />
+          Continue with Google
+        </button>
+      )}
 
       {/* Apple */}
       <button
         className="mt-3 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-[#0F0F10] px-5 py-3 text-sm font-black text-white transition hover:bg-[#1E1B4B] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#0F0F10]/25 disabled:opacity-50"
         disabled={isLoading}
-        onClick={() => {
-          setStatus("error");
-          setErrorMessage("Apple sign-in is coming soon. Use Google or your email in the meantime.");
-        }}
+        onClick={handleAppleClick}
         type="button"
       >
-        <Icon name="apple" />
-        Continue with Apple
+        <AppleIcon />
+        {status === "apple-loading" ? "Signing in…" : "Continue with Apple"}
       </button>
 
       {/* OR divider */}

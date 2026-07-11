@@ -1,11 +1,11 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
-import { usePathname } from "next/navigation";
+import { type ReactNode, useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { BackButton } from "@/app/components/back-button";
 import { HydrationGate } from "@/app/components/hydration-gate";
 import { BrandMark, cn, Icon } from "@/app/components/ui";
+import { useAuthStore } from "@/services/context/auth";
 
 /* ------------------------------------------------------------------ */
 /*  Nav IDs                                                            */
@@ -54,7 +54,6 @@ const navGroups: NavGroup[] = [
   {
     label: "Main",
     items: [
-      { id: "home", label: "Home", href: "/home", icon: "home" },
       { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: "dashboard" },
       { id: "coach", label: "Coach", href: "/coach", icon: "brain" },
       { id: "plans", label: "Plans", href: "/plans", icon: "calendar" },
@@ -91,7 +90,7 @@ const navGroups: NavGroup[] = [
 /* ------------------------------------------------------------------ */
 
 const mobileNavItems: NavItem[] = [
-  { id: "home", label: "Home", href: "/home", icon: "home" },
+  { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: "dashboard" },
   { id: "coach", label: "Coach", href: "/coach", icon: "brain" },
   { id: "create", label: "Create", href: "/create", icon: "create" },
   { id: "progress", label: "Progress", href: "/progress", icon: "progress" },
@@ -206,10 +205,7 @@ function MobileNav({ active }: { active: NavId }) {
     <>
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/92 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <BackButton className="h-10 w-10" fallbackHref="/home" />
-            <BrandMark />
-          </div>
+          <BrandMark />
           <Link
             className="grid h-10 w-10 place-items-center rounded-lg bg-[#FACC15] text-[#1E1B4B] shadow-sm"
             href="/paywall"
@@ -263,7 +259,28 @@ export function AppLayout({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const active = activeOverride ?? detectNavId(pathname);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  useEffect(() => {
+    if (hasHydrated && !isAuthenticated) {
+      const from = pathname ? `?from=${encodeURIComponent(pathname)}` : "";
+      router.replace(`/auth${from}`);
+    }
+  }, [hasHydrated, isAuthenticated, pathname, router]);
+
+  // Guard SSR + pre-hydration flash — render nothing until we know if signed in.
+  if (!hasHydrated || !isAuthenticated) {
+    return (
+      <HydrationGate>
+        <div className="grid min-h-screen place-items-center bg-[#F8FAFC] px-4">
+          <div className="h-12 w-12 animate-pulse rounded-lg bg-slate-200" />
+        </div>
+      </HydrationGate>
+    );
+  }
 
   return (
     <HydrationGate>
@@ -272,9 +289,6 @@ export function AppLayout({
         <MobileNav active={active} />
         <main className="px-4 py-6 pb-28 sm:px-6 lg:ml-72 lg:px-8 lg:py-10">
           <div className="mx-auto max-w-6xl">
-            <div className="mb-6 hidden lg:block">
-              <BackButton />
-            </div>
             {children}
           </div>
         </main>

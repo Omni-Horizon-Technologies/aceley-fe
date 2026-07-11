@@ -38,7 +38,7 @@ export default function AuthPage() {
             </div>
             <p className="mt-5 text-center text-sm font-semibold text-slate-500">
               Don&rsquo;t have an account?{" "}
-              <Link className="font-black text-[#312E81] transition hover:text-[#CA8A04]" href="/onboarding/profile-ready">
+              <Link className="font-black text-[#312E81] transition hover:text-[#CA8A04]" href="/sign-up">
                 Sign up
               </Link>
             </p>

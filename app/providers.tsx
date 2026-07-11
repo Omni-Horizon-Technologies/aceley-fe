@@ -2,10 +2,13 @@
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AppStateProvider } from "@/lib/state";
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider as LegacyAuthProvider } from "@/lib/auth";
 import type { ReactNode } from "react";
 
-const rawGoogleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+const rawGoogleClientId =
+  process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID ??
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ??
+  "";
 
 export const isGoogleAuthConfigured = rawGoogleClientId.length > 0;
 
@@ -19,16 +22,16 @@ const googleClientId = isGoogleAuthConfigured
 
 if (!isGoogleAuthConfigured && process.env.NODE_ENV === "development") {
   console.warn(
-    "[aceley] NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set — Google sign-in is disabled. Copy .env.example to .env.local and fill it in.",
+    "[aceley] NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID is not set — Google sign-in is disabled. Copy .env.example to .env.local and fill it in.",
   );
 }
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <AuthProvider>
+      <LegacyAuthProvider>
         <AppStateProvider>{children}</AppStateProvider>
-      </AuthProvider>
+      </LegacyAuthProvider>
     </GoogleOAuthProvider>
   );
 }

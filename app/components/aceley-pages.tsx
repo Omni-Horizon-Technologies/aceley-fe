@@ -66,6 +66,12 @@ import {
 import { useAuth } from "@/lib/auth";
 import { AuthForm } from "@/app/components/auth-form";
 import { HydrationGate } from "@/app/components/hydration-gate";
+import { completeOnboarding as completeOnboardingApi, patchProfile } from "@/services/modules/auth";
+import { searchSchools } from "@/services/modules/identity";
+import type { SchoolSearchResult } from "@/services/dtos/identity";
+import { ApiError } from "@/services/apiClient";
+import { useAuthStore } from "@/services/context/auth";
+import type { ReferralSource } from "@/services/dtos/auth";
 
 const inputClass =
   "min-h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-[#1E1B4B] outline-none transition placeholder:text-slate-400 focus:border-[#312E81] focus:ring-4 focus:ring-[#312E81]/10";
@@ -190,32 +196,55 @@ export function OnboardingProfileReadyPage() {
 export function OnboardingNamePage() {
   const router = useRouter();
   const { answers, updateAnswers } = useAppState();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleContinue() {
+    const nickname = answers.name.trim();
+    if (!nickname) return;
+    setSaving(true);
+    setError("");
+    try {
+      const updated = await patchProfile({ nickname });
+      useAuthStore.getState().updateProfile(updated);
+      dismissKeyboard();
+      router.push("/onboarding/about");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? "Couldn’t save your name. Try again."
+          : "Network error. Try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
-    <OnboardingShell backHref="/onboarding/profile-ready" step="1 of 6">
+    <OnboardingShell backHref="/sign-up" step="1 of 6">
       <h1 className="text-3xl font-black tracking-tight">What should we call you?</h1>
       <input
         autoFocus
         className="mt-8 min-h-14 w-full rounded-full border border-slate-200 bg-white px-6 text-lg font-black text-[#1E1B4B] outline-none shadow-sm placeholder:text-slate-300 focus:border-[#312E81] focus:ring-4 focus:ring-[#312E81]/10"
+        disabled={saving}
         onChange={(event) => updateAnswers({ name: event.target.value })}
         onKeyDown={(event) => {
-          if (event.key === "Enter" && answers.name.trim()) {
-            dismissKeyboard();
-            router.push("/onboarding/about");
+          if (event.key === "Enter" && answers.name.trim() && !saving) {
+            void handleContinue();
           }
         }}
         placeholder="Your name"
         value={answers.name}
       />
+      {error ? (
+        <p className="mt-3 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{error}</p>
+      ) : null}
       <PrimaryButton
         className="mt-8 w-full"
-        disabled={!answers.name.trim()}
-        onClick={() => {
-          dismissKeyboard();
-          router.push("/onboarding/about");
-        }}
+        disabled={!answers.name.trim() || saving}
+        onClick={() => void handleContinue()}
       >
-        Continue
+        {saving ? "Saving…" : "Continue"}
       </PrimaryButton>
     </OnboardingShell>
   );
@@ -225,7 +254,37 @@ export function OnboardingAboutPage() {
   const router = useRouter();
   const { answers, updateAnswers } = useAppState();
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const valid = answers.country.trim() && answers.age.trim();
+
+  async function handleContinue() {
+    if (!valid) return;
+    const age = Number.parseInt(answers.age, 10);
+    if (Number.isNaN(age)) {
+      setError("Enter a valid age.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const updated = await patchProfile({
+        country: answers.country.trim(),
+        age,
+      });
+      useAuthStore.getState().updateProfile(updated);
+      dismissKeyboard();
+      router.push("/onboarding/school");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? "Couldn’t save. Try again."
+          : "Network error. Try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <OnboardingShell backHref="/onboarding/name" step="2 of 6">
@@ -233,6 +292,7 @@ export function OnboardingAboutPage() {
       <div className="mt-8 space-y-4">
         <button
           className="flex min-h-12 w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-4 text-left text-sm font-black text-[#1E1B4B] shadow-sm"
+          disabled={saving}
           onClick={() => setOpen(true)}
           type="button"
         >
@@ -241,28 +301,28 @@ export function OnboardingAboutPage() {
         </button>
         <input
           className={inputClass}
+          disabled={saving}
           inputMode="numeric"
           maxLength={3}
           onChange={(event) => updateAnswers({ age: event.target.value.replace(/\D/g, "").slice(0, 3) })}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && valid) {
-              dismissKeyboard();
-              router.push("/onboarding/school");
+            if (event.key === "Enter" && valid && !saving) {
+              void handleContinue();
             }
           }}
           placeholder="Age"
           value={answers.age}
         />
       </div>
+      {error ? (
+        <p className="mt-3 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{error}</p>
+      ) : null}
       <PrimaryButton
         className="mt-8 w-full"
-        disabled={!valid}
-        onClick={() => {
-          dismissKeyboard();
-          router.push("/onboarding/school");
-        }}
+        disabled={!valid || saving}
+        onClick={() => void handleContinue()}
       >
-        Continue
+        {saving ? "Saving…" : "Continue"}
       </PrimaryButton>
 
       {open ? (
@@ -297,58 +357,69 @@ export function OnboardingAboutPage() {
   );
 }
 
-type University = {
-  name: string;
-  country: string;
-  "state-province"?: string | null;
-};
-
 export function OnboardingSchoolPage() {
   const router = useRouter();
   const { answers, updateAnswers } = useAppState();
   const [query, setQuery] = useState(answers.school);
   const [manual, setManual] = useState(false);
-  const [results, setResults] = useState<University[]>([]);
+  const [results, setResults] = useState<SchoolSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [schoolError, setSchoolError] = useState("");
+
+  async function saveAndContinue() {
+    const school = answers.school.trim();
+    if (!school) return;
+    setSaving(true);
+    setSchoolError("");
+    try {
+      const updated = await patchProfile({
+        school_name: school,
+        school_country: answers.schoolCountry?.trim() || answers.country?.trim() || null,
+      });
+      useAuthStore.getState().updateProfile(updated);
+      dismissKeyboard();
+      router.push("/onboarding/major");
+    } catch (err) {
+      setSchoolError(
+        err instanceof ApiError
+          ? "Couldn’t save your school. Try again."
+          : "Network error. Try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   useEffect(() => {
     if (manual || query.trim().length < 2 || answers.school === query) {
       return;
     }
 
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => {
+    const country = answers.country && answers.country !== "Other" ? answers.country.trim() : "";
+    if (!country) {
+      // Backend requires a country. Nudge the user back if they skipped it.
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
       setLoading(true);
       setError("");
-
-      const params = new URLSearchParams({ name: query.trim() });
-      if (answers.country && answers.country !== "Other") {
-        params.set("country", answers.country);
+      try {
+        const data = await searchSchools(country, query.trim(), 25);
+        if (!cancelled) setResults(data);
+      } catch {
+        if (!cancelled) setError("School search is unavailable right now.");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      fetch(`https://universities.hipolabs.com/search?${params.toString()}`, {
-        signal: controller.signal,
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("School search failed.");
-          }
-
-          return response.json() as Promise<University[]>;
-        })
-        .then((data) => setResults(data.slice(0, 25)))
-        .catch((searchError: Error) => {
-          if (searchError.name !== "AbortError") {
-            setError("School search is unavailable right now.");
-          }
-        })
-        .finally(() => setLoading(false));
-    }, 350);
+    }, 300);
 
     return () => {
+      cancelled = true;
       window.clearTimeout(timer);
-      controller.abort();
     };
   }, [answers.country, answers.school, manual, query]);
 
@@ -428,7 +499,7 @@ export function OnboardingSchoolPage() {
                 <span>
                   <span className="block text-sm font-black">{school.name}</span>
                   <span className="mt-1 block text-xs font-semibold text-slate-500">
-                    {[school["state-province"], school.country].filter(Boolean).join(" · ")}
+                    {[school.country, school.domains[0]].filter(Boolean).join(" · ")}
                   </span>
                 </span>
               </button>
@@ -436,15 +507,15 @@ export function OnboardingSchoolPage() {
           </div>
         ) : null}
       </div>
+      {schoolError ? (
+        <p className="mt-3 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{schoolError}</p>
+      ) : null}
       <PrimaryButton
         className="mt-8 w-full"
-        disabled={!answers.school.trim()}
-        onClick={() => {
-          dismissKeyboard();
-          router.push("/onboarding/major");
-        }}
+        disabled={!answers.school.trim() || saving}
+        onClick={() => void saveAndContinue()}
       >
-        Continue
+        {saving ? "Saving…" : "Continue"}
       </PrimaryButton>
     </OnboardingShell>
   );
@@ -453,6 +524,29 @@ export function OnboardingSchoolPage() {
 export function OnboardingMajorPage() {
   const router = useRouter();
   const { answers, updateAnswers } = useAppState();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleContinue() {
+    const major = answers.major.trim();
+    if (!major) return;
+    setSaving(true);
+    setError("");
+    try {
+      const updated = await patchProfile({ major });
+      useAuthStore.getState().updateProfile(updated);
+      dismissKeyboard();
+      router.push("/onboarding/source");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? "Couldn’t save your major. Try again."
+          : "Network error. Try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <OnboardingShell backHref="/onboarding/school" step="4 of 6">
@@ -460,6 +554,7 @@ export function OnboardingMajorPage() {
       <input
         autoCapitalize="words"
         className={cn(inputClass, "mt-8")}
+        disabled={saving}
         onChange={(event) => updateAnswers({ major: event.target.value })}
         placeholder="Major or subject area"
         value={answers.major}
@@ -473,6 +568,7 @@ export function OnboardingMajorPage() {
                 ? "border-[#312E81] bg-[#312E81] text-white"
                 : "border-slate-200 bg-white text-[#1E1B4B]",
             )}
+            disabled={saving}
             key={major}
             onClick={() => updateAnswers({ major })}
             type="button"
@@ -481,18 +577,19 @@ export function OnboardingMajorPage() {
           </button>
         ))}
       </div>
+      {error ? (
+        <p className="mt-4 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{error}</p>
+      ) : null}
       <PrimaryButton
         className="mt-8 w-full"
-        disabled={!answers.major.trim()}
-        onClick={() => {
-          dismissKeyboard();
-          router.push("/onboarding/source");
-        }}
+        disabled={!answers.major.trim() || saving}
+        onClick={() => void handleContinue()}
       >
-        Continue
+        {saving ? "Saving…" : "Continue"}
       </PrimaryButton>
       <button
         className="mt-4 min-h-11 text-sm font-black text-slate-500"
+        disabled={saving}
         onClick={() => router.push("/onboarding/source")}
         type="button"
       >
@@ -502,9 +599,49 @@ export function OnboardingMajorPage() {
   );
 }
 
+const REFERRAL_ENUM: Record<string, ReferralSource> = {
+  instagram: "instagram",
+  tiktok: "tiktok",
+  youtube: "youtube",
+  google: "google",
+  friend: "other",
+  "app-store": "other",
+  other: "other",
+};
+
 export function OnboardingSourcePage() {
+  const router = useRouter();
   const { answers, updateAnswers, completeOnboarding } = useAppState();
-  const { createBackendProfile, user } = useAuth();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const selected = SOURCE_OPTIONS.find((s) => s.label === answers.source);
+
+  async function handleContinue() {
+    if (!selected) return;
+    const referral_source = REFERRAL_ENUM[selected.id] ?? "other";
+    const referral_other_text =
+      referral_source === "other" ? selected.label : null;
+    setSaving(true);
+    setError("");
+    try {
+      const updated = await completeOnboardingApi({
+        referral_source,
+        referral_other_text,
+      });
+      useAuthStore.getState().updateProfile(updated);
+      completeOnboarding();
+      router.push("/paywall");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? "Couldn’t finish onboarding. Try again."
+          : "Network error. Try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <OnboardingShell backHref="/onboarding/major" step="5 of 6">
@@ -516,6 +653,7 @@ export function OnboardingSourcePage() {
               "flex min-h-14 w-full items-center gap-3 rounded-lg border bg-white p-3 text-left shadow-sm transition",
               answers.source === source.label ? "border-[#312E81] ring-4 ring-[#312E81]/10" : "border-slate-200",
             )}
+            disabled={saving}
             key={source.id}
             onClick={() => updateAnswers({ source: source.label })}
             type="button"
@@ -527,30 +665,22 @@ export function OnboardingSourcePage() {
           </button>
         ))}
       </div>
-      {answers.source ? (
-        <Link
-          className="mt-8 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#FACC15] px-5 py-3 text-sm font-semibold text-[#1E1B4B] shadow-sm transition hover:bg-[#312E81] hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/25"
-          href="/paywall"
-          onClick={async () => {
-            await createBackendProfile({
-              display_name: answers.name || user?.name || "Student",
-              role: "student",
-              grade: answers.level || undefined,
-            });
-            completeOnboarding();
-          }}
-        >
-          Continue
-        </Link>
-      ) : (
-        <button
-          className="mt-8 inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-[#FACC15] px-5 py-3 text-sm font-semibold text-[#1E1B4B] opacity-60 shadow-sm"
-          disabled
-          type="button"
-        >
-          Continue
-        </button>
-      )}
+      {error ? (
+        <p className="mt-4 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{error}</p>
+      ) : null}
+      <button
+        className={cn(
+          "mt-8 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#FACC15] px-5 py-3 text-sm font-semibold text-[#1E1B4B] shadow-sm transition focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/25",
+          !selected || saving
+            ? "cursor-not-allowed opacity-60"
+            : "hover:bg-[#312E81] hover:text-white",
+        )}
+        disabled={!selected || saving}
+        onClick={() => void handleContinue()}
+        type="button"
+      >
+        {saving ? "Saving…" : "Continue"}
+      </button>
     </OnboardingShell>
   );
 }
@@ -559,7 +689,7 @@ export function PaywallPage() {
   const router = useRouter();
   const { hydrated, onboarded } = useAppState();
   const [selected, setSelected] = useState("yearly");
-  const goHome = () => router.replace("/");
+  const goHome = () => router.replace("/dashboard");
 
   return (
     <main className="fixed inset-0 z-50 flex items-end bg-[#1E1B4B]/45 text-[#1E1B4B]">
@@ -683,7 +813,7 @@ export function HomePage() {
       if (isAuthenticated && profile) {
         state.completeOnboarding();
       } else if (!isAuthenticated) {
-        router.replace("/onboarding/profile-ready");
+        router.replace("/sign-up");
       }
     }
   }, [router, state, isAuthenticated, profile]);
@@ -2257,7 +2387,7 @@ export function ProfilePageClient() {
   function resetOnboarding() {
     state.resetOnboarding();
     logout();
-    router.push("/onboarding/profile-ready");
+    router.push("/sign-up");
   }
 
   function signOut() {
