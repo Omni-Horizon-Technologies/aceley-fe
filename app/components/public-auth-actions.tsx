@@ -153,6 +153,87 @@ export function PublicAuthFooterLinks({
   );
 }
 
+export function PublicPrimaryCta({
+  tone = "dark",
+  label,
+  loggedInLabel = "Open app",
+  className,
+  size = "md",
+  withArrow = false,
+  variant = "solid",
+}: {
+  tone?: Tone;
+  label: string;
+  loggedInLabel?: string;
+  className?: string;
+  size?: "sm" | "md" | "lg";
+  withArrow?: boolean;
+  variant?: "solid" | "shine" | "dark";
+}) {
+  const { hydrated, onboarded } = useAppState();
+  const { isAuthenticated } = useAuth();
+  const isLoggedIn = onboarded && isAuthenticated;
+
+  const sizeClass =
+    size === "sm"
+      ? "min-h-10 px-4 py-2 text-sm"
+      : size === "lg"
+        ? "min-h-12 px-7 py-3.5 text-[15px]"
+        : "min-h-11 px-6 py-3 text-sm";
+
+  const base =
+    variant === "shine"
+      ? cn(
+          "ace-cta inline-flex items-center justify-center gap-2 rounded-xl font-black text-[#1E1B4B]",
+          sizeClass,
+          className,
+        )
+      : variant === "dark"
+        ? cn(
+            "inline-flex items-center justify-center gap-2 rounded-lg bg-[#1E1B4B] font-black text-white shadow-sm transition hover:bg-[#312E81]",
+            sizeClass,
+            className,
+          )
+        : cn(
+            "inline-flex items-center justify-center gap-2 rounded-lg bg-[#FACC15] font-black text-[#1E1B4B] shadow-[0_8px_24px_rgba(250,204,21,0.28)] transition",
+            sizeClass,
+            tone === "dark" ? "hover:bg-white" : "hover:bg-[#312E81] hover:text-white",
+            className,
+          );
+
+  if (!hydrated) {
+    return <div aria-hidden="true" className={cn("h-11 w-32 rounded-lg bg-[#FACC15]/40", className)} />;
+  }
+
+  const href = isLoggedIn ? appHref : signupHref;
+  const content = isLoggedIn ? loggedInLabel : label;
+  const inner = (
+    <>
+      {content}
+      {withArrow && (
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M5 12h14" />
+          <path d="m12 5 7 7-7 7" />
+        </svg>
+      )}
+    </>
+  );
+
+  if (variant === "shine") {
+    return (
+      <Link className={base} href={href}>
+        <span className="relative z-[1] inline-flex items-center gap-2">{inner}</span>
+      </Link>
+    );
+  }
+
+  return (
+    <Link className={base} href={href}>
+      {inner}
+    </Link>
+  );
+}
+
 export function PricingPlanCta({
   href,
   cta,

@@ -224,17 +224,15 @@ function mergeState(value: unknown): AppState {
   };
 }
 
-function applyTheme(preference: ThemePreference) {
+function applyTheme() {
   if (typeof window === "undefined") {
     return;
   }
 
   const root = document.documentElement;
-  const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const resolved = preference === "auto" ? (systemDark ? "dark" : "light") : preference;
-
-  root.dataset.theme = preference;
-  root.classList.toggle("dark", resolved === "dark");
+  root.dataset.theme = "light";
+  root.classList.remove("dark");
+  root.style.colorScheme = "light";
 }
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
@@ -279,7 +277,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    applyTheme(state.themePreference);
+    applyTheme();
   }, [hydrated, state.themePreference]);
 
   const updateAnswers = useCallback((patch: Partial<Answers>) => {
