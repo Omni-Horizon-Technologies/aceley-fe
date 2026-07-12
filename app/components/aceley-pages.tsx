@@ -67,6 +67,15 @@ import { useAuth } from "@/lib/auth";
 import { AuthForm } from "@/app/components/auth-form";
 import { HydrationGate } from "@/app/components/hydration-gate";
 import { completeOnboarding as completeOnboardingApi, patchProfile } from "@/services/modules/auth";
+import {
+  AppleBrandTile,
+  FriendIcon,
+  GoogleBrandTile,
+  InstagramIcon,
+  OtherSourceIcon,
+  TikTokIcon,
+  YoutubeIcon,
+} from "@/app/components/icons/icons";
 import { searchSchools } from "@/services/modules/identity";
 import type { SchoolSearchResult } from "@/services/dtos/identity";
 import { ApiError } from "@/services/apiClient";
@@ -110,31 +119,285 @@ function activePlan(plans: Plan[]) {
 }
 
 
+/**
+ * Deterministic particle field for the onboarding background. Hand-tuned
+ * positions/durations so the SSR + client output match, and the particles
+ * feel organic instead of grid-aligned.
+ */
+const ONBOARDING_PARTICLES: Array<{ left: number; dur: number; delay: number; color: string }> = [
+  { left: 6, dur: 14, delay: 0, color: "rgba(250,204,21,0.55)" },
+  { left: 14, dur: 18, delay: 3, color: "rgba(67,56,202,0.45)" },
+  { left: 22, dur: 12, delay: 6, color: "rgba(147,51,234,0.4)" },
+  { left: 31, dur: 20, delay: 1, color: "rgba(250,204,21,0.4)" },
+  { left: 42, dur: 16, delay: 8, color: "rgba(236,72,153,0.4)" },
+  { left: 53, dur: 22, delay: 4, color: "rgba(67,56,202,0.4)" },
+  { left: 62, dur: 14, delay: 10, color: "rgba(250,204,21,0.5)" },
+  { left: 71, dur: 18, delay: 2, color: "rgba(147,51,234,0.4)" },
+  { left: 82, dur: 16, delay: 7, color: "rgba(236,72,153,0.35)" },
+  { left: 91, dur: 20, delay: 5, color: "rgba(67,56,202,0.4)" },
+];
+
+function OnboardingProgress({ current, total }: { current: number; total: number }) {
+  return (
+    <div
+      aria-label={`Step ${current} of ${total}`}
+      aria-valuemax={total}
+      aria-valuemin={1}
+      aria-valuenow={current}
+      className="flex flex-1 items-center gap-1.5"
+      role="progressbar"
+    >
+      {Array.from({ length: total }).map((_, index) => {
+        const stepIndex = index + 1;
+        const isDone = stepIndex < current;
+        const isCurrent = stepIndex === current;
+        return (
+          <span
+            key={index}
+            className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200"
+          >
+            {isDone ? (
+              <span className="absolute inset-0 rounded-full bg-[#1E1B4B]" />
+            ) : null}
+            {isCurrent ? (
+              <>
+                <span
+                  className="absolute inset-0 rounded-full bg-gradient-to-r from-[#312E81] to-[#1E1B4B] [animation:ace-fill-bar_0.7s_cubic-bezier(0.22,1,0.36,1)_both]"
+                />
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-y-0 left-0 w-1/2 rounded-full bg-gradient-to-r from-transparent via-white/50 to-transparent [animation:ace-bar-shimmer_2.4s_ease-in-out_infinite]"
+                />
+              </>
+            ) : null}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function OnboardingShell({
   children,
   step,
+  totalSteps = 5,
   backHref,
 }: {
   children: ReactNode;
-  step?: string;
+  step?: number;
+  totalSteps?: number;
   backHref?: string;
 }) {
   return (
     <HydrationGate>
-      <main className="min-h-screen bg-[#F8FAFC] px-4 py-6 text-[#1E1B4B] sm:px-6">
-        <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-md flex-col">
+      <main className="relative min-h-[100dvh] overflow-hidden bg-white text-[#1E1B4B]">
+        {/* Rotating conic-gradient beam — the "premium" background flourish */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-1/2 h-[1200px] w-[1200px] rounded-full opacity-70 [animation:ace-conic-spin_60s_linear_infinite]"
+          style={{
+            filter: "blur(52px)",
+            background:
+              "conic-gradient(from 0deg, transparent 0deg, rgba(250,204,21,0.22) 40deg, transparent 90deg, rgba(67,56,202,0.22) 160deg, transparent 210deg, rgba(236,72,153,0.18) 260deg, transparent 300deg, rgba(147,51,234,0.20) 340deg, transparent 360deg)",
+            WebkitMaskImage:
+              "radial-gradient(circle, #000 30%, transparent 70%)",
+            maskImage: "radial-gradient(circle, #000 30%, transparent 70%)",
+          }}
+        />
+
+        {/* Aurora blobs */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-[-160px] right-[-120px] h-[440px] w-[440px] rounded-full [animation:ace-blob-drift-a_18s_ease-in-out_infinite]"
+          style={{
+            background: "radial-gradient(circle, rgba(250,204,21,0.42), transparent 60%)",
+            filter: "blur(60px)",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-[-180px] left-[-140px] h-[460px] w-[460px] rounded-full [animation:ace-blob-drift-b_22s_ease-in-out_infinite]"
+          style={{
+            background: "radial-gradient(circle, rgba(67,56,202,0.35), transparent 60%)",
+            filter: "blur(64px)",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-[35%] right-[-80px] h-[300px] w-[300px] rounded-full [animation:ace-blob-drift-c_20s_ease-in-out_infinite]"
+          style={{
+            background: "radial-gradient(circle, rgba(147,51,234,0.24), transparent 62%)",
+            filter: "blur(56px)",
+          }}
+        />
+        {/* Warm 4th blob (pink) — bottom-right, balances the palette */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-[10%] right-[-100px] h-[280px] w-[280px] rounded-full [animation:ace-blob-drift-d_24s_ease-in-out_infinite]"
+          style={{
+            background: "radial-gradient(circle, rgba(236,72,153,0.20), transparent 62%)",
+            filter: "blur(54px)",
+          }}
+        />
+
+        {/* Drifting dot grid, masked to fade in around the edges */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 [animation:ace-grid-drift_10s_linear_infinite]"
+          style={{
+            backgroundImage:
+              "radial-gradient(rgba(30,27,75,0.08) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+            WebkitMaskImage:
+              "radial-gradient(ellipse 60% 40% at 50% 40%, transparent 40%, #000 75%)",
+            maskImage:
+              "radial-gradient(ellipse 60% 40% at 50% 40%, transparent 40%, #000 75%)",
+          }}
+        />
+
+        {/* Floating particle field — tiny dots drifting upward */}
+        {ONBOARDING_PARTICLES.map((p, i) => (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute h-1 w-1 rounded-full"
+            key={i}
+            style={{
+              left: `${p.left}%`,
+              bottom: "-12px",
+              background: p.color,
+              animation: `ace-particle-rise ${p.dur}s ease-in-out ${p.delay}s infinite`,
+            }}
+          />
+        ))}
+
+        <div className="relative mx-auto flex min-h-[100dvh] max-w-md flex-col px-5 pb-8 pt-5 sm:px-6">
           {backHref || step ? (
-            <div className="flex items-center justify-between">
-              {backHref ? <BackButton fallbackHref={backHref} /> : <span />}
-              {step ? <span className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">{step}</span> : null}
-            </div>
+            <header className="flex items-center gap-4 pb-8">
+              {backHref ? (
+                <BackButton fallbackHref={backHref} />
+              ) : (
+                <span className="h-11 w-11 shrink-0" />
+              )}
+              {step ? (
+                <>
+                  <OnboardingProgress current={step} total={totalSteps} />
+                  <span
+                    aria-live="polite"
+                    className="shrink-0 text-xs font-black tabular-nums text-slate-500"
+                    key={step}
+                    style={{ animation: "ace-rise 0.4s ease-out both" }}
+                  >
+                    {step}/{totalSteps}
+                  </span>
+                </>
+              ) : null}
+            </header>
           ) : null}
-          <section className="flex flex-1 flex-col justify-center py-8">{children}</section>
+          <section className="flex flex-1 flex-col [animation:ace-rise_0.4s_ease-out_both]">
+            {children}
+          </section>
         </div>
       </main>
     </HydrationGate>
   );
 }
+
+
+function OnboardingHeading({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div>
+      {eyebrow ? (
+        <div className="inline-flex items-center gap-2 rounded-full bg-[#FACC15]/15 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#CA8A04]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#FACC15]" />
+          {eyebrow}
+        </div>
+      ) : null}
+      <h1 className="mt-4 text-[36px] font-black leading-[1.02] tracking-[-0.02em] text-[#1E1B4B] sm:text-[40px]">
+        {title}
+      </h1>
+      {description ? (
+        <p className="mt-4 text-[16px] font-semibold leading-[1.55] text-slate-500">
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function OnboardingCta({
+  label,
+  loadingLabel,
+  disabled,
+  loading,
+  onClick,
+  secondary,
+}: {
+  label: string;
+  loadingLabel?: string;
+  disabled?: boolean;
+  loading?: boolean;
+  onClick: () => void;
+  secondary?: { label: string; onClick: () => void };
+}) {
+  return (
+    <div className="sticky bottom-6 mt-auto flex flex-col gap-2 pt-8 pb-2 sm:bottom-10">
+      <button
+        className={cn(
+          "group relative flex min-h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-[15px] font-black text-white transition",
+          "focus:outline-none focus-visible:ring-4 focus-visible:ring-[#1E1B4B]/20",
+          "disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none",
+          !(disabled || loading) &&
+            "bg-gradient-to-r from-[#1E1B4B] to-[#312E81] shadow-[0_12px_30px_rgba(30,27,75,0.28)] hover:shadow-[0_18px_40px_rgba(30,27,75,0.35)]",
+          (disabled || loading) && "bg-slate-200",
+        )}
+        disabled={disabled || loading}
+        onClick={onClick}
+        type="button"
+      >
+        <span className="relative z-[1] inline-flex items-center gap-2">
+          {loading ? loadingLabel ?? "Saving…" : label}
+          {!loading ? (
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="transition group-hover:translate-x-0.5"
+            >
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          ) : null}
+        </span>
+      </button>
+      {secondary ? (
+        <button
+          className="min-h-11 text-sm font-black text-slate-500 transition hover:text-[#312E81]"
+          onClick={secondary.onClick}
+          type="button"
+        >
+          {secondary.label}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+const OnboardingInputClass =
+  "min-h-14 w-full rounded-2xl border-2 border-transparent bg-slate-50 px-5 text-[17px] font-bold text-[#1E1B4B] outline-none transition placeholder:text-slate-400 hover:bg-slate-100 focus:border-[#1E1B4B]/30 focus:bg-white focus:shadow-[0_0_0_6px_rgba(30,27,75,0.06)]";
 
 function VerifiedBadge() {
   return (
@@ -221,31 +484,38 @@ export function OnboardingNamePage() {
   }
 
   return (
-    <OnboardingShell backHref="/sign-up" step="1 of 6">
-      <h1 className="text-3xl font-black tracking-tight">What should we call you?</h1>
-      <input
-        autoFocus
-        className="mt-8 min-h-14 w-full rounded-full border border-slate-200 bg-white px-6 text-lg font-black text-[#1E1B4B] outline-none shadow-sm placeholder:text-slate-300 focus:border-[#312E81] focus:ring-4 focus:ring-[#312E81]/10"
-        disabled={saving}
-        onChange={(event) => updateAnswers({ name: event.target.value })}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" && answers.name.trim() && !saving) {
-            void handleContinue();
-          }
-        }}
-        placeholder="Your name"
-        value={answers.name}
+    <OnboardingShell backHref="/sign-up" step={1}>
+      <OnboardingHeading
+        eyebrow="Nice to meet you"
+        title="What should we call you?"
+        description="This is how Aceley will greet you every day."
       />
-      {error ? (
-        <p className="mt-3 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{error}</p>
-      ) : null}
-      <PrimaryButton
-        className="mt-8 w-full"
-        disabled={!answers.name.trim() || saving}
-        onClick={() => void handleContinue()}
-      >
-        {saving ? "Saving…" : "Continue"}
-      </PrimaryButton>
+      <div className="mt-10">
+        <input
+          autoFocus
+          className={OnboardingInputClass}
+          disabled={saving}
+          onChange={(event) => updateAnswers({ name: event.target.value })}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && answers.name.trim() && !saving) {
+              void handleContinue();
+            }
+          }}
+          placeholder="e.g. Maya"
+          value={answers.name}
+        />
+        {error ? (
+          <p className="mt-3 rounded-2xl bg-[#FACC15]/10 px-4 py-3 text-sm font-semibold text-[#CA8A04]">
+            {error}
+          </p>
+        ) : null}
+      </div>
+      <OnboardingCta
+        label="Continue"
+        loading={saving}
+        disabled={!answers.name.trim()}
+        onClick={handleContinue}
+      />
     </OnboardingShell>
   );
 }
@@ -287,20 +557,30 @@ export function OnboardingAboutPage() {
   }
 
   return (
-    <OnboardingShell backHref="/onboarding/name" step="2 of 6">
-      <h1 className="text-3xl font-black tracking-tight">Tell us about yourself</h1>
-      <div className="mt-8 space-y-4">
+    <OnboardingShell backHref="/onboarding/name" step={2}>
+      <OnboardingHeading
+        eyebrow="A bit about you"
+        title="Where are you studying?"
+        description="Helps us surface classmates and study spaces near you."
+      />
+      <div className="mt-10 space-y-3">
         <button
-          className="flex min-h-12 w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-4 text-left text-sm font-black text-[#1E1B4B] shadow-sm"
+          className={cn(
+            OnboardingInputClass,
+            "flex items-center justify-between text-left",
+            !answers.country && "text-slate-400",
+          )}
           disabled={saving}
           onClick={() => setOpen(true)}
           type="button"
         >
-          <span>{answers.country || "Choose country"}</span>
+          <span className={cn(!answers.country && "font-semibold")}>
+            {answers.country || "Choose your country"}
+          </span>
           <Icon name="chevronRight" className="h-4 w-4 text-slate-400" />
         </button>
         <input
-          className={inputClass}
+          className={OnboardingInputClass}
           disabled={saving}
           inputMode="numeric"
           maxLength={3}
@@ -310,45 +590,57 @@ export function OnboardingAboutPage() {
               void handleContinue();
             }
           }}
-          placeholder="Age"
+          placeholder="Your age"
           value={answers.age}
         />
+        {error ? (
+          <p className="rounded-2xl bg-[#FACC15]/10 px-4 py-3 text-sm font-semibold text-[#CA8A04]">
+            {error}
+          </p>
+        ) : null}
       </div>
-      {error ? (
-        <p className="mt-3 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{error}</p>
-      ) : null}
-      <PrimaryButton
-        className="mt-8 w-full"
-        disabled={!valid || saving}
-        onClick={() => void handleContinue()}
-      >
-        {saving ? "Saving…" : "Continue"}
-      </PrimaryButton>
+      <OnboardingCta
+        label="Continue"
+        loading={saving}
+        disabled={!valid}
+        onClick={handleContinue}
+      />
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-end bg-[#1E1B4B]/40 px-3 pb-3" role="dialog" aria-modal="true">
-          <div className="max-h-[78vh] w-full overflow-hidden rounded-lg bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-              <h2 className="font-black">Country</h2>
-              <button className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100" onClick={() => setOpen(false)} type="button">
+        <div className="fixed inset-0 z-50 flex items-end bg-[#1E1B4B]/50 backdrop-blur-sm" role="dialog" aria-modal="true">
+          <div className="max-h-[80vh] w-full overflow-hidden rounded-t-3xl bg-white shadow-[0_-24px_60px_rgba(15,13,41,0.28)] [animation:ace-rise_0.28s_ease-out_both]">
+            <div className="flex items-center justify-between px-5 py-4">
+              <h2 className="text-lg font-black">Choose your country</h2>
+              <button
+                aria-label="Close"
+                className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200"
+                onClick={() => setOpen(false)}
+                type="button"
+              >
                 <Icon name="x" className="h-4 w-4" />
               </button>
             </div>
-            <div className="max-h-[62vh] overflow-y-auto p-3">
-              {COUNTRIES.map((country) => (
-                <button
-                  className="flex min-h-11 w-full items-center justify-between rounded-lg px-3 text-left text-sm font-bold hover:bg-[#FEFCE8]"
-                  key={country}
-                  onClick={() => {
-                    updateAnswers({ country });
-                    setOpen(false);
-                  }}
-                  type="button"
-                >
-                  {country}
-                  {answers.country === country ? <Icon name="check" className="h-4 w-4 text-[#CA8A04]" /> : null}
-                </button>
-              ))}
+            <div className="max-h-[62vh] overflow-y-auto px-3 pb-6">
+              {COUNTRIES.map((country) => {
+                const selected = answers.country === country;
+                return (
+                  <button
+                    className={cn(
+                      "flex min-h-12 w-full items-center justify-between rounded-xl px-4 text-left text-[15px] font-bold transition",
+                      selected ? "bg-[#1E1B4B] text-white" : "text-[#1E1B4B] hover:bg-slate-100",
+                    )}
+                    key={country}
+                    onClick={() => {
+                      updateAnswers({ country });
+                      setOpen(false);
+                    }}
+                    type="button"
+                  >
+                    {country}
+                    {selected ? <Icon name="check" className="h-4 w-4 text-[#FACC15]" /> : null}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -426,19 +718,26 @@ export function OnboardingSchoolPage() {
   const canShowSchoolResults = !manual && query.trim().length >= 2 && answers.school !== query;
 
   return (
-    <OnboardingShell backHref="/onboarding/about" step="3 of 6">
-      <h1 className="text-3xl font-black tracking-tight">What school do you go to?</h1>
-      <div className="mt-7 space-y-4">
+    <OnboardingShell backHref="/onboarding/about" step={3}>
+      <OnboardingHeading
+        eyebrow="Your school"
+        title="Where do you study?"
+        description="Search your university, or type it in manually."
+      />
+      <div className="mt-10 space-y-3">
         {answers.school && !manual ? (
-          <div className="rounded-lg border border-[#FACC15]/60 bg-[#FEFCE8] p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
+          <div className="rounded-2xl bg-[#1E1B4B] p-5 text-white">
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#FACC15]">Selected</p>
+            <div className="mt-3 flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#CA8A04]">Selected</p>
-                <h2 className="mt-2 font-black">{answers.school}</h2>
-                <p className="mt-1 text-sm text-slate-600">{answers.schoolCountry || answers.country}</p>
+                <h2 className="text-lg font-black">{answers.school}</h2>
+                <p className="mt-1 text-sm font-semibold text-white/60">
+                  {answers.schoolCountry || answers.country}
+                </p>
               </div>
               <button
-                className="grid h-9 w-9 place-items-center rounded-lg bg-white text-[#1E1B4B]"
+                aria-label="Change school"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
                 onClick={() => {
                   updateAnswers({ school: "", schoolCountry: "" });
                   setQuery("");
@@ -449,42 +748,50 @@ export function OnboardingSchoolPage() {
               </button>
             </div>
           </div>
+        ) : (
+          <div className="relative">
+            <Icon name="search" className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              className={cn(OnboardingInputClass, "pl-12")}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                if (manual) {
+                  updateAnswers({ school: event.target.value, schoolCountry: answers.country });
+                }
+              }}
+              placeholder={manual ? "Type your school" : "Search universities"}
+              value={query}
+            />
+          </div>
+        )}
+
+        {loading && canShowSchoolResults ? (
+          <p className="pt-1 text-sm font-semibold text-slate-500">Searching…</p>
         ) : null}
-        <div className="relative">
-          <Icon name="search" className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
-          <input
-            className={cn(inputClass, "pl-11")}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              if (manual) {
-                updateAnswers({ school: event.target.value, schoolCountry: answers.country });
-              }
-            }}
-            placeholder={manual ? "Type school manually" : "Search universities"}
-            value={query}
-          />
-        </div>
-        {loading && canShowSchoolResults ? <p className="text-sm font-semibold text-slate-500">Searching...</p> : null}
         {error ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
-            {error} You can enter your school manually.
+          <div className="rounded-2xl bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+            {error} You can enter your school manually below.
           </div>
         ) : null}
-        <button
-          className="text-sm font-black text-[#312E81]"
-          onClick={() => {
-            setManual(true);
-            updateAnswers({ school: query, schoolCountry: answers.country });
-          }}
-          type="button"
-        >
-          Can&apos;t find it? Type it manually
-        </button>
+
+        {!answers.school && !manual ? (
+          <button
+            className="text-sm font-black text-[#312E81] transition hover:text-[#CA8A04]"
+            onClick={() => {
+              setManual(true);
+              updateAnswers({ school: query, schoolCountry: answers.country });
+            }}
+            type="button"
+          >
+            Can&apos;t find it? Type it manually
+          </button>
+        ) : null}
+
         {canShowSchoolResults && results.length ? (
-          <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+          <div className="mt-2 max-h-72 space-y-2 overflow-y-auto pr-1">
             {results.map((school) => (
               <button
-                className="flex w-full items-start gap-3 rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-[#FACC15]/70"
+                className="flex w-full items-start gap-3 rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-slate-100"
                 key={`${school.name}-${school.country}`}
                 onClick={() => {
                   updateAnswers({ school: school.name, schoolCountry: school.country });
@@ -493,12 +800,12 @@ export function OnboardingSchoolPage() {
                 }}
                 type="button"
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#312E81]/10 text-[#312E81]">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#1E1B4B] text-[#FACC15]">
                   <Icon name="school" className="h-4 w-4" />
                 </span>
                 <span>
-                  <span className="block text-sm font-black">{school.name}</span>
-                  <span className="mt-1 block text-xs font-semibold text-slate-500">
+                  <span className="block text-[15px] font-black leading-tight">{school.name}</span>
+                  <span className="mt-1 block text-xs font-bold text-slate-500">
                     {[school.country, school.domains[0]].filter(Boolean).join(" · ")}
                   </span>
                 </span>
@@ -508,15 +815,16 @@ export function OnboardingSchoolPage() {
         ) : null}
       </div>
       {schoolError ? (
-        <p className="mt-3 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{schoolError}</p>
+        <p className="mt-3 rounded-2xl bg-[#FACC15]/10 px-4 py-3 text-sm font-semibold text-[#CA8A04]">
+          {schoolError}
+        </p>
       ) : null}
-      <PrimaryButton
-        className="mt-8 w-full"
-        disabled={!answers.school.trim() || saving}
-        onClick={() => void saveAndContinue()}
-      >
-        {saving ? "Saving…" : "Continue"}
-      </PrimaryButton>
+      <OnboardingCta
+        label="Continue"
+        loading={saving}
+        disabled={!answers.school.trim()}
+        onClick={saveAndContinue}
+      />
     </OnboardingShell>
   );
 }
@@ -549,52 +857,55 @@ export function OnboardingMajorPage() {
   }
 
   return (
-    <OnboardingShell backHref="/onboarding/school" step="4 of 6">
-      <h1 className="text-3xl font-black tracking-tight">What&apos;s your major?</h1>
-      <input
-        autoCapitalize="words"
-        className={cn(inputClass, "mt-8")}
-        disabled={saving}
-        onChange={(event) => updateAnswers({ major: event.target.value })}
-        placeholder="Major or subject area"
-        value={answers.major}
+    <OnboardingShell backHref="/onboarding/school" step={4}>
+      <OnboardingHeading
+        eyebrow="Your major"
+        title="What are you studying?"
+        description="Pick a suggestion or type your own."
       />
-      <div className="mt-5 flex max-h-56 flex-wrap gap-2 overflow-y-auto">
-        {MAJOR_SUGGESTIONS.map((major) => (
-          <button
-            className={cn(
-              "rounded-lg border px-3 py-2 text-sm font-bold transition",
-              answers.major === major
-                ? "border-[#312E81] bg-[#312E81] text-white"
-                : "border-slate-200 bg-white text-[#1E1B4B]",
-            )}
-            disabled={saving}
-            key={major}
-            onClick={() => updateAnswers({ major })}
-            type="button"
-          >
-            {major}
-          </button>
-        ))}
+      <div className="mt-10 space-y-4">
+        <input
+          autoCapitalize="words"
+          className={OnboardingInputClass}
+          disabled={saving}
+          onChange={(event) => updateAnswers({ major: event.target.value })}
+          placeholder="e.g. Computer Science"
+          value={answers.major}
+        />
+        <div className="flex max-h-64 flex-wrap gap-2 overflow-y-auto pb-1">
+          {MAJOR_SUGGESTIONS.map((major) => {
+            const selected = answers.major === major;
+            return (
+              <button
+                className={cn(
+                  "rounded-full px-4 py-2 text-sm font-bold transition",
+                  selected
+                    ? "bg-[#1E1B4B] text-white"
+                    : "bg-slate-100 text-[#1E1B4B] hover:bg-slate-200",
+                )}
+                disabled={saving}
+                key={major}
+                onClick={() => updateAnswers({ major })}
+                type="button"
+              >
+                {major}
+              </button>
+            );
+          })}
+        </div>
+        {error ? (
+          <p className="rounded-2xl bg-[#FACC15]/10 px-4 py-3 text-sm font-semibold text-[#CA8A04]">
+            {error}
+          </p>
+        ) : null}
       </div>
-      {error ? (
-        <p className="mt-4 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{error}</p>
-      ) : null}
-      <PrimaryButton
-        className="mt-8 w-full"
-        disabled={!answers.major.trim() || saving}
-        onClick={() => void handleContinue()}
-      >
-        {saving ? "Saving…" : "Continue"}
-      </PrimaryButton>
-      <button
-        className="mt-4 min-h-11 text-sm font-black text-slate-500"
-        disabled={saving}
-        onClick={() => router.push("/onboarding/source")}
-        type="button"
-      >
-        Skip for now
-      </button>
+      <OnboardingCta
+        label="Continue"
+        loading={saving}
+        disabled={!answers.major.trim()}
+        onClick={handleContinue}
+        secondary={{ label: "Skip for now", onClick: () => router.push("/onboarding/source") }}
+      />
     </OnboardingShell>
   );
 }
@@ -607,6 +918,16 @@ const REFERRAL_ENUM: Record<string, ReferralSource> = {
   friend: "other",
   "app-store": "other",
   other: "other",
+};
+
+const SOURCE_BRAND_TILE: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+  instagram: InstagramIcon,
+  tiktok: TikTokIcon,
+  youtube: YoutubeIcon,
+  google: GoogleBrandTile,
+  "app-store": AppleBrandTile,
+  friend: FriendIcon,
+  other: OtherSourceIcon,
 };
 
 export function OnboardingSourcePage() {
@@ -644,43 +965,62 @@ export function OnboardingSourcePage() {
   }
 
   return (
-    <OnboardingShell backHref="/onboarding/major" step="5 of 6">
-      <h1 className="text-3xl font-black tracking-tight">How did you hear about Aceley?</h1>
-      <div className="mt-7 max-h-[52vh] space-y-2 overflow-y-auto pr-1">
-        {SOURCE_OPTIONS.map((source) => (
-          <button
-            className={cn(
-              "flex min-h-14 w-full items-center gap-3 rounded-lg border bg-white p-3 text-left shadow-sm transition",
-              answers.source === source.label ? "border-[#312E81] ring-4 ring-[#312E81]/10" : "border-slate-200",
-            )}
-            disabled={saving}
-            key={source.id}
-            onClick={() => updateAnswers({ source: source.label })}
-            type="button"
-          >
-            <span className={cn("grid h-10 w-10 place-items-center rounded-lg", source.color, source.id === "google" ? "text-[#1E1B4B] ring-1 ring-slate-200" : "text-white")}>
-              <Icon name={source.icon} className="h-4 w-4" />
-            </span>
-            <span className="font-black">{source.label}</span>
-          </button>
-        ))}
+    <OnboardingShell backHref="/onboarding/major" step={5}>
+      <OnboardingHeading
+        eyebrow="Last step"
+        title="How did you hear about Aceley?"
+        description="Helps us keep making the app better."
+      />
+      <div className="mt-10 space-y-2 pb-2">
+        {SOURCE_OPTIONS.map((source) => {
+          const active = answers.source === source.label;
+          const BrandTile = SOURCE_BRAND_TILE[source.id];
+          return (
+            <button
+              className={cn(
+                "flex min-h-16 w-full items-center gap-4 rounded-2xl p-3.5 text-left transition",
+                active ? "bg-[#1E1B4B] text-white" : "bg-slate-50 text-[#1E1B4B] hover:bg-slate-100",
+              )}
+              disabled={saving}
+              key={source.id}
+              onClick={() => updateAnswers({ source: source.label })}
+              type="button"
+            >
+              {BrandTile ? (
+                <BrandTile className="h-11 w-11 shrink-0" height={44} width={44} />
+              ) : (
+                <span
+                  className={cn(
+                    "grid h-11 w-11 shrink-0 place-items-center rounded-xl",
+                    source.color,
+                    source.id === "google" ? "text-[#1E1B4B] ring-1 ring-slate-200" : "text-white",
+                  )}
+                >
+                  <Icon name={source.icon} className="h-4 w-4" />
+                </span>
+              )}
+              <span className="flex-1 text-[15px] font-black">{source.label}</span>
+              {active ? (
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-[#FACC15] text-[#1E1B4B]">
+                  <Icon name="check" className="h-3 w-3" />
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
       </div>
       {error ? (
-        <p className="mt-4 rounded-lg bg-[#FACC15]/10 px-3 py-2 text-sm text-[#CA8A04]">{error}</p>
+        <p className="rounded-2xl bg-[#FACC15]/10 px-4 py-3 text-sm font-semibold text-[#CA8A04]">
+          {error}
+        </p>
       ) : null}
-      <button
-        className={cn(
-          "mt-8 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#FACC15] px-5 py-3 text-sm font-semibold text-[#1E1B4B] shadow-sm transition focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/25",
-          !selected || saving
-            ? "cursor-not-allowed opacity-60"
-            : "hover:bg-[#312E81] hover:text-white",
-        )}
-        disabled={!selected || saving}
-        onClick={() => void handleContinue()}
-        type="button"
-      >
-        {saving ? "Saving…" : "Continue"}
-      </button>
+      <OnboardingCta
+        label="Finish"
+        loadingLabel="Finishing…"
+        loading={saving}
+        disabled={!selected}
+        onClick={handleContinue}
+      />
     </OnboardingShell>
   );
 }

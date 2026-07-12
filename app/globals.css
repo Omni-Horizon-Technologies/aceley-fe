@@ -208,6 +208,98 @@ textarea {
   pointer-events: none;
 }
 
+@keyframes ace-fill-bar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes ace-bar-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  60%,
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes ace-blob-drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, 60px) scale(1.1);
+  }
+  66% {
+    transform: translate(-30px, 30px) scale(0.95);
+  }
+}
+
+@keyframes ace-blob-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-50px, -40px) scale(1.15);
+  }
+}
+
+@keyframes ace-blob-drift-c {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    transform: translate(50px, -30px) scale(1.05);
+  }
+  75% {
+    transform: translate(-20px, 40px) scale(0.9);
+  }
+}
+
+@keyframes ace-blob-drift-d {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  35% {
+    transform: translate(-40px, -50px) scale(1.08);
+  }
+  70% {
+    transform: translate(30px, 20px) scale(0.95);
+  }
+}
+
+@keyframes ace-conic-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes ace-particle-rise {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-120vh);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   [class*="ace-rise"],
   [class*="ace-float"],
@@ -217,7 +309,12 @@ textarea {
   .ace-testi-track,
   .ace-cta,
   .ace-cta::after,
-  .ace-beam {
+  .ace-beam,
+  [class*="ace-fill-bar"],
+  [class*="ace-bar-shimmer"],
+  [class*="ace-blob-drift"],
+  [class*="ace-conic-spin"],
+  [class*="ace-particle-rise"] {
     animation: none !important;
   }
 }
