@@ -134,6 +134,18 @@ const studyToolIds = new Set(navGroups.find((g) => g.label === "Study Tools")?.i
 
 function Sidebar({ active }: { active: NavId }) {
   const [toolsOpen, setToolsOpen] = useState(false);
+  const signOut = useAuthStore((s) => s.signOut);
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function handleSignOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      setSigningOut(false);
+    }
+  }
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 flex-col overflow-y-auto border-r border-white/10 bg-gradient-to-b from-[#1E1B4B] to-[#312E81] p-5 text-white lg:flex">
@@ -192,6 +204,35 @@ function Sidebar({ active }: { active: NavId }) {
           Notes in. Cards out. Studying starts immediately.
         </p>
       </div>
+      <button
+        className={cn(
+          "mt-3 flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-semibold transition",
+          "text-white/72 hover:bg-white/10 hover:text-white",
+          "focus:outline-none focus-visible:ring-4 focus-visible:ring-white/20",
+          "disabled:cursor-not-allowed disabled:opacity-60",
+        )}
+        disabled={signingOut}
+        onClick={() => void handleSignOut()}
+        type="button"
+      >
+        <span className="inline-flex items-center gap-3">
+          <svg
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <path d="m16 17 5-5-5-5" />
+            <path d="M21 12H9" />
+          </svg>
+          {signingOut ? "Signing out…" : "Log out"}
+        </span>
+      </button>
     </aside>
   );
 }
