@@ -2,7 +2,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { LottieMascot } from "@/app/components/lottie-mascot";
-import { PublicPrimaryCta } from "@/app/components/public-auth-actions";
+import { PricingPlanCta, PublicPrimaryCta } from "@/app/components/public-auth-actions";
 
 export const metadata: Metadata = {
   title: "Aceley | AI study coach for exam season",
@@ -285,6 +285,72 @@ const companyLinks = [
   { label: "Contact", href: "#" },
 ];
 
+type LandingPlan = {
+  name: string;
+  badge?: string;
+  price: string;
+  cadence: string;
+  description: string;
+  note?: string;
+  savings?: string;
+  features: string[];
+  cta: string;
+  href: string;
+  highlighted?: boolean;
+};
+
+const pricingPlans: LandingPlan[] = [
+  {
+    name: "Free",
+    price: "£0",
+    cadence: "/month",
+    description: "Perfect for students trying the platform.",
+    features: [
+      "3 Decks",
+      "Up to 100 Flashcards",
+      "Basic Study Mode",
+      "Basic AI Flashcard Generation",
+      "Progress Tracking",
+    ],
+    cta: "Sign up free",
+    href: "/sign-up",
+  },
+  {
+    name: "Student Pro",
+    badge: "Most Popular",
+    price: "£4.99",
+    cadence: "/month",
+    description: "For students who study regularly and want unlimited access.",
+    features: [
+      "Unlimited Decks & Flashcards",
+      "Unlimited AI Generation",
+      "PDF & Image-to-Flashcard",
+      "Smart Review System",
+      "Study Streaks",
+      "Priority Support",
+    ],
+    cta: "Upgrade to Pro",
+    href: "/paywall",
+    highlighted: true,
+  },
+  {
+    name: "Pro Annual",
+    badge: "Best Value",
+    price: "£39.99",
+    cadence: "/year",
+    description: "The best plan for students who want the full year covered.",
+    note: "Approx. £3.33/month",
+    savings: "Save 33% annually",
+    features: [
+      "Everything in Student Pro",
+      "Annual Savings",
+      "Priority Access to New Features",
+    ],
+    cta: "Get Annual Plan",
+    href: "/paywall",
+  },
+];
+
 function StarRow({ count = 5, size = 15, color = "#facc15" }: { count?: number; size?: number; color?: string }) {
   return (
     <div className="flex gap-[3px]" aria-hidden="true">
@@ -383,7 +449,7 @@ export default function LandingPage() {
           <div className="hidden items-center gap-7 md:flex">
             <a href="#tools" className="text-sm font-bold text-slate-600 transition hover:text-[#CA8A04]">Tools</a>
             <a href="#how" className="text-sm font-bold text-slate-600 transition hover:text-[#CA8A04]">How it works</a>
-            <Link href="/pricing" className="text-sm font-bold text-slate-600 transition hover:text-[#CA8A04]">Pricing</Link>
+            <a href="#pricing" className="text-sm font-bold text-slate-600 transition hover:text-[#CA8A04]">Pricing</a>
             <PublicPrimaryCta tone="light" label="Get started" loggedInLabel="Open app" size="sm" variant="dark" />
           </div>
           <div className="md:hidden">
@@ -883,8 +949,275 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ===== PRICING ===== */}
+      <section id="pricing" className="relative overflow-hidden scroll-mt-8">
+        {/* soft ambient wash */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-full"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 55% at 50% 0%, rgba(67,56,202,0.08), transparent 65%), radial-gradient(ellipse 60% 40% at 85% 20%, rgba(250,204,21,0.12), transparent 70%), radial-gradient(ellipse 60% 40% at 15% 25%, rgba(236,72,153,0.08), transparent 70%)",
+          }}
+        />
+        {/* dot grid */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: "radial-gradient(rgba(30,27,75,0.08) 1px, transparent 1px)",
+            backgroundSize: "26px 26px",
+            WebkitMaskImage: "radial-gradient(ellipse 70% 50% at 50% 30%, #000, transparent 75%)",
+            maskImage: "radial-gradient(ellipse 70% 50% at 50% 30%, #000, transparent 75%)",
+          }}
+        />
+
+        <div className="relative mx-auto max-w-[1200px] px-5 pt-16 pb-8 sm:px-8 sm:pt-24 lg:px-14 lg:pt-28">
+          <div className="mx-auto max-w-[760px] text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#FACC15]/40 bg-white/80 px-3.5 py-1.5 text-[12px] font-black uppercase tracking-[0.18em] text-[#CA8A04] shadow-sm backdrop-blur">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#FACC15]" />
+              Pricing
+            </span>
+            <h2 className="mt-5 text-4xl font-black leading-[1.02] tracking-[-0.02em] text-[#1E1B4B] sm:text-5xl lg:text-[56px]">
+              Choose the plan that
+              <br className="hidden sm:block" /> gets you to an <span className="relative inline-block text-[#1E1B4B]">
+                <span className="relative z-[1]">A</span>
+                <span aria-hidden="true" className="absolute inset-x-0 bottom-1 -z-0 h-3 bg-[#FACC15]/60" />
+              </span>.
+            </h2>
+            <p className="mx-auto mt-5 max-w-[560px] text-base font-semibold leading-[1.6] text-slate-600 sm:text-[17px]">
+              Start free forever. Upgrade when you&rsquo;re ready for unlimited AI generation, PDFs, and smart study.
+            </p>
+          </div>
+
+          <div className="relative mt-14 grid gap-6 lg:grid-cols-3 lg:items-center lg:gap-5">
+            {pricingPlans.map((plan) => {
+              const isPopular = plan.highlighted;
+              const isSaver = Boolean(plan.savings);
+              return (
+                <div
+                  key={plan.name}
+                  className={
+                    isPopular
+                      ? "relative lg:scale-[1.04] lg:z-[2]"
+                      : "relative lg:z-[1]"
+                  }
+                >
+                  {/* glowing aura for the popular card */}
+                  {isPopular ? (
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute -inset-4 rounded-[32px] opacity-70 blur-2xl"
+                      style={{
+                        background:
+                          "conic-gradient(from 90deg, rgba(250,204,21,0.55), rgba(67,56,202,0.55), rgba(236,72,153,0.45), rgba(250,204,21,0.55))",
+                      }}
+                    />
+                  ) : null}
+
+                  <article
+                    className={
+                      isPopular
+                        ? "relative flex h-full flex-col overflow-hidden rounded-[28px] p-8 text-white shadow-[0_30px_60px_rgba(30,27,75,0.35)]"
+                        : "relative flex h-full flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white p-8 shadow-[0_10px_30px_rgba(15,13,41,0.06)] transition hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(15,13,41,0.12)]"
+                    }
+                    style={
+                      isPopular
+                        ? {
+                            background:
+                              "radial-gradient(ellipse 90% 60% at 20% 0%, rgba(250,204,21,0.14), transparent 60%), linear-gradient(160deg,#312e81 0%, #1e1b4b 60%, #0f0c26 100%)",
+                          }
+                        : undefined
+                    }
+                  >
+                    {/* subtle inner texture for popular */}
+                    {isPopular ? (
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 opacity-40"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
+                          backgroundSize: "34px 34px",
+                          WebkitMaskImage: "radial-gradient(ellipse 100% 60% at 50% 0%, #000, transparent 70%)",
+                          maskImage: "radial-gradient(ellipse 100% 60% at 50% 0%, #000, transparent 70%)",
+                        }}
+                      />
+                    ) : null}
+
+                    {/* ribbon */}
+                    {plan.badge ? (
+                      <div className="relative z-[1] mb-6 flex items-center justify-between">
+                        <span
+                          className={
+                            isPopular
+                              ? "inline-flex items-center gap-1.5 rounded-full bg-[#FACC15] px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#1E1B4B] shadow-[0_6px_18px_rgba(250,204,21,0.45)]"
+                              : "inline-flex items-center gap-1.5 rounded-full bg-[#FACC15]/15 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#CA8A04]"
+                          }
+                        >
+                          {isPopular ? (
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="m12 2 2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2Z" />
+                            </svg>
+                          ) : null}
+                          {plan.badge}
+                        </span>
+                        {isSaver ? (
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-emerald-700">
+                            {plan.savings}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="mb-6 h-6" aria-hidden="true" />
+                    )}
+
+                    {/* name */}
+                    <h3
+                      className={
+                        isPopular
+                          ? "relative z-[1] text-[22px] font-black tracking-[-0.01em] text-white"
+                          : "relative z-[1] text-[22px] font-black tracking-[-0.01em] text-[#1E1B4B]"
+                      }
+                    >
+                      {plan.name}
+                    </h3>
+                    <p
+                      className={
+                        isPopular
+                          ? "relative z-[1] mt-2 min-h-11 text-[14px] font-semibold leading-[1.55] text-white/74"
+                          : "relative z-[1] mt-2 min-h-11 text-[14px] font-semibold leading-[1.55] text-slate-600"
+                      }
+                    >
+                      {plan.description}
+                    </p>
+
+                    {/* price */}
+                    <div className="relative z-[1] mt-7 border-t pt-6"
+                      style={{ borderColor: isPopular ? "rgba(255,255,255,0.1)" : "rgba(226,232,240,1)" }}
+                    >
+                      <div className="flex items-baseline gap-1.5">
+                        <span
+                          className={
+                            isPopular
+                              ? "text-[56px] font-black leading-none tracking-[-0.03em] text-white"
+                              : "text-[56px] font-black leading-none tracking-[-0.03em] text-[#1E1B4B]"
+                          }
+                        >
+                          {plan.price}
+                        </span>
+                        <span
+                          className={
+                            isPopular
+                              ? "text-sm font-bold text-white/70"
+                              : "text-sm font-bold text-slate-500"
+                          }
+                        >
+                          {plan.cadence}
+                        </span>
+                      </div>
+                      {plan.note ? (
+                        <p
+                          className={
+                            isPopular
+                              ? "mt-2 text-[13px] font-semibold text-white/70"
+                              : "mt-2 text-[13px] font-semibold text-slate-500"
+                          }
+                        >
+                          {plan.note}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    {/* CTA */}
+                    <div className="relative z-[1] mt-6">
+                      <PricingPlanCta cta={plan.cta} highlighted={isPopular} href={plan.href} />
+                    </div>
+
+                    {/* features */}
+                    <div
+                      className="relative z-[1] mt-7 border-t pt-6"
+                      style={{ borderColor: isPopular ? "rgba(255,255,255,0.1)" : "rgba(226,232,240,1)" }}
+                    >
+                      <p
+                        className={
+                          isPopular
+                            ? "text-[11px] font-black uppercase tracking-[0.18em] text-[#FACC15]"
+                            : "text-[11px] font-black uppercase tracking-[0.18em] text-[#CA8A04]"
+                        }
+                      >
+                        What&rsquo;s included
+                      </p>
+                      <ul className="mt-4 flex flex-1 flex-col gap-3.5">
+                        {plan.features.map((feature) => (
+                          <li className="flex items-start gap-3 text-[14.5px] leading-[1.5]" key={feature}>
+                            <span
+                              className={
+                                isPopular
+                                  ? "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#FACC15] text-[#1E1B4B]"
+                                  : "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#312E81] text-white"
+                              }
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M20 6 9 17l-5-5" />
+                              </svg>
+                            </span>
+                            <span
+                              className={
+                                isPopular ? "font-semibold text-white/88" : "font-semibold text-slate-700"
+                              }
+                            >
+                              {feature}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </article>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* trust row */}
+          <div className="mt-16 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { label: "No hidden fees", icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+              ) },
+              { label: "Cancel anytime", icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+              ) },
+              { label: "Secure payments", icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
+              ) },
+              { label: "Student-friendly", icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5a6 6 0 0 0 12 0v-5"/></svg>
+              ) },
+            ].map((chip) => (
+              <div
+                key={chip.label}
+                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/70 px-4 py-3.5 backdrop-blur transition hover:border-[#312E81]/20 hover:bg-white"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#312E81]/10 text-[#312E81]">
+                  {chip.icon}
+                </span>
+                <span className="text-sm font-black text-[#1E1B4B]">{chip.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-10 text-center text-sm font-semibold text-slate-500">
+            Questions about a plan?{" "}
+            <a href="#" className="font-black text-[#312E81] transition hover:text-[#CA8A04]">
+              Talk to our team &rarr;
+            </a>
+          </p>
+        </div>
+      </section>
+
       {/* ===== CTA ===== */}
-      <section id="pricing" className="mx-auto max-w-[1200px] px-5 py-14 sm:px-8 sm:py-20 lg:px-14 lg:py-26">
+      <section className="mx-auto max-w-[1200px] px-5 py-14 sm:px-8 sm:py-20 lg:px-14 lg:py-26">
         <div
           className="relative overflow-hidden rounded-[28px] p-10 text-center text-white sm:p-14 lg:p-18"
           style={{

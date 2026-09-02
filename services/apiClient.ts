@@ -199,7 +199,7 @@ function handleUnauthorized(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
   if (!window.location.pathname.startsWith("/auth") && !window.location.pathname.startsWith("/sign-in")) {
-    window.location.href = "/auth";
+    window.location.href = "/sign-in";
   }
 }
 

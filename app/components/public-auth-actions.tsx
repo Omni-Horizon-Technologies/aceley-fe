@@ -6,7 +6,7 @@ import { Icon, PrimaryButton, SecondaryButton, cn } from "@/app/components/ui";
 import { useAuthStore } from "@/services/context/auth";
 
 const signupHref = "/sign-up";
-const loginHref = "/auth";
+const loginHref = "/sign-in";
 const appHref = "/dashboard";
 
 type Tone = "dark" | "light";

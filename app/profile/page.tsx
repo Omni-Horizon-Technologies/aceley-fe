@@ -96,7 +96,7 @@ function ProfilePageContent() {
         <p className="mt-2 text-sm leading-6 text-slate-500">
           Log in to see your Aceley profile.
         </p>
-        <PrimaryButton className="mt-6 w-full sm:w-auto" href="/auth">
+        <PrimaryButton className="mt-6 w-full sm:w-auto" href="/sign-in">
           Log in
         </PrimaryButton>
       </section>

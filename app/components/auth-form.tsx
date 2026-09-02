@@ -36,6 +36,18 @@ const APPLE_REDIRECT_URI =
 
 const isAppleConfigured = APPLE_SERVICE_ID.length > 0;
 
+const APPLE_ALLOWED_HOSTS = new Set([
+  "tryaceley.com",
+  "www.tryaceley.com",
+]);
+
+function isAppleAllowedOnHost() {
+  return (
+    typeof window !== "undefined" &&
+    APPLE_ALLOWED_HOSTS.has(window.location.hostname)
+  );
+}
+
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
@@ -126,6 +138,13 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
       );
       return;
     }
+    if (!isAppleAllowedOnHost()) {
+      setStatus("error");
+      setErrorMessage(
+        "Apple sign-in isn’t available on this domain. Use Google or magic link instead.",
+      );
+      return;
+    }
     initApple();
     if (typeof window === "undefined" || !window.AppleID) {
       setStatus("error");
@@ -160,7 +179,7 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
       } else {
         setStatus("error");
         setErrorMessage(
-          "Apple sign-in isn’t available on this domain. It only works on tryaceley.com — use Google or magic link on localhost.",
+          "Apple sign-in failed. Please try again or use Google / magic link instead.",
         );
       }
     }
@@ -227,7 +246,7 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
           <div
             aria-hidden="true"
             className={cn(
-              "pointer-events-none flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
+              "pointer-events-none flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-[0_2px_6px_rgba(15,13,41,0.04)]",
               isLoading && "opacity-50",
             )}
           >
@@ -266,7 +285,7 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
         </div>
       ) : (
         <button
-          className="flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition hover:bg-slate-50 disabled:opacity-50"
+          className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-[0_2px_6px_rgba(15,13,41,0.04)] transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
           disabled={isLoading}
           onClick={() => {
             setStatus("error");
@@ -283,7 +302,7 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
 
       {/* Apple */}
       <button
-        className="mt-3 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-[#0F0F10] px-5 py-3 text-sm font-black text-white transition hover:bg-[#1E1B4B] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#0F0F10]/25 disabled:opacity-50"
+        className="mt-3 flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl bg-[#0F0F10] px-5 py-3 text-sm font-black text-white shadow-[0_8px_20px_rgba(15,15,16,0.18)] transition hover:bg-[#1E1B4B] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#0F0F10]/25 disabled:opacity-50"
         disabled={isLoading}
         onClick={handleAppleClick}
         type="button"
@@ -305,7 +324,7 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
           <span className="sr-only">Email</span>
           <input
             autoComplete="email"
-            className="min-h-12 w-full rounded-lg bg-white px-4 text-sm font-semibold text-[#1E1B4B] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none transition placeholder:text-slate-400 focus:ring-4 focus:ring-[#312E81]/15 disabled:opacity-50"
+            className="min-h-13 w-full rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-[#1E1B4B] shadow-[0_2px_6px_rgba(15,13,41,0.04)] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#312E81] focus:ring-4 focus:ring-[#312E81]/12 disabled:opacity-50"
             disabled={isLoading}
             inputMode="email"
             onChange={(event) => setEmail(event.target.value)}
@@ -317,7 +336,7 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
         </label>
 
         <button
-          className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#FACC15] px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-[0_8px_24px_rgba(250,204,21,0.28)] transition hover:bg-[#312E81] hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/25 disabled:opacity-50"
+          className="mt-3 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#FACC15] px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-[0_10px_28px_rgba(250,204,21,0.32)] transition hover:-translate-y-0.5 hover:bg-[#312E81] hover:text-white hover:shadow-[0_16px_36px_rgba(30,27,75,0.28)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FACC15]/30 disabled:pointer-events-none disabled:opacity-50"
           disabled={isLoading}
           type="submit"
         >

@@ -14,6 +14,8 @@ import {
   type TouchEvent,
 } from "react";
 import { BackButton } from "@/app/components/back-button";
+import { AuthForm } from "@/app/components/auth-form";
+import { AceleyAPlusIcon } from "@/app/components/icons/icons";
 import { LottieMascot } from "@/app/components/lottie-mascot";
 import {
   BrandMark,
@@ -64,7 +66,6 @@ import {
   type ThemePreference,
 } from "@/lib/state";
 import { useAuth } from "@/lib/auth";
-import { AuthForm } from "@/app/components/auth-form";
 import { HydrationGate } from "@/app/components/hydration-gate";
 import { completeOnboarding as completeOnboardingApi, patchProfile } from "@/services/modules/auth";
 import {
@@ -432,26 +433,34 @@ function SectionTitle({ eyebrow, title }: { eyebrow?: string; title: string }) {
 export function OnboardingProfileReadyPage() {
   return (
     <OnboardingShell>
-      <div className="text-center">
-        <h1 className="text-3xl font-black tracking-tight text-[#1E1B4B]">Welcome to Aceley</h1>
-        <p className="mx-auto mt-2 max-w-xs text-center text-sm font-semibold text-slate-500">
-          Snap notes, run flashcards, and ace exams faster.
+      <div className="my-auto w-full">
+        <div className="mx-auto flex h-28 w-28 items-center justify-center sm:h-32 sm:w-32">
+          <LottieMascot name="mascot_Hi" className="h-full w-full" sizeLabel="Aceley waving mascot" />
+        </div>
+        <div className="mt-2 text-center">
+          <h1 className="text-3xl font-black tracking-tight text-[#1E1B4B]">Welcome to Aceley</h1>
+          <p className="mx-auto mt-2 max-w-xs text-center text-sm font-semibold text-slate-500">
+            Snap notes, run flashcards, and ace exams faster.
+          </p>
+        </div>
+        <div className="relative mt-10">
+          <AceleyAPlusIcon
+            className="pointer-events-none absolute -top-14 -right-16 z-[3] h-20 w-20 text-[#ff604b] drop-shadow-[0_12px_28px_rgba(255,96,75,0.35)] sm:-top-16 sm:-right-24 sm:h-24 sm:w-24"
+          />
+          <AuthForm mode="signup" />
+        </div>
+        <p className="mt-5 text-center text-xs leading-5 text-slate-500">
+          By continuing, you accept Aceley&apos;s{" "}
+          <span className="font-bold text-[#312E81]">Terms</span> /{" "}
+          <span className="font-bold text-[#312E81]">Privacy</span>
+        </p>
+        <p className="mt-4 text-center text-sm font-semibold text-slate-500">
+          Already have an account?{" "}
+          <Link className="font-black text-[#312E81] transition hover:text-[#CA8A04]" href="/sign-in">
+            Log in
+          </Link>
         </p>
       </div>
-      <div className="mt-6">
-        <AuthForm mode="signup" />
-      </div>
-      <p className="mt-5 text-center text-xs leading-5 text-slate-500">
-        By continuing, you accept Aceley&apos;s{" "}
-        <span className="font-bold text-[#312E81]">Terms</span> /{" "}
-        <span className="font-bold text-[#312E81]">Privacy</span>
-      </p>
-      <p className="mt-4 text-center text-sm font-semibold text-slate-500">
-        Already have an account?{" "}
-        <Link className="font-black text-[#312E81] transition hover:text-[#CA8A04]" href="/auth">
-          Log in
-        </Link>
-      </p>
     </OnboardingShell>
   );
 }
@@ -1112,7 +1121,7 @@ export function PaywallPage() {
             {hydrated && !onboarded ? (
               <button
                 className="mt-3 min-h-11 w-full rounded-lg bg-[#F8FAFC] px-5 py-3 text-sm font-black text-slate-600 transition hover:bg-slate-100 hover:text-[#312E81]"
-                onClick={() => router.push("/auth")}
+                onClick={() => router.push("/sign-in")}
                 type="button"
               >
                 Already have an account? Log in
