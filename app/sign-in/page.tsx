@@ -4,10 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Icon, PrimaryButton, cn } from "@/app/components/ui";
 
-const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/v1`
-).replace(/\/$/, "");
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
 type Status = "idle" | "loading" | "sent" | "error";
 
@@ -31,7 +28,7 @@ export default function SignInPage() {
     setStatus("loading");
     setErrorMessage("");
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/email/request-link`, {
+      const res = await fetch(`${API_URL}/api/v1/auth/email/request-link`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmed }),
