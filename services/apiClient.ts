@@ -204,7 +204,13 @@ function handleUnauthorized(): void {
 }
 
 export const apiClient = new ApiClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000",
+  // Keep the public API URL consistent with lib/api.ts. Auth paths include
+  // /api/v1, so remove that prefix from the configured base URL here.
+  baseUrl: (
+    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    "http://localhost:8000/api/v1"
+  ).replace(/\/api\/v1\/?$/, ""),
   getToken: readTokenFromStorage,
   onUnauthorized: handleUnauthorized,
 });
