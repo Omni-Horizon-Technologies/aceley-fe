@@ -1,12 +1,12 @@
 "use client";
 
 import { AppLayout } from "@/app/components/app-layout";
-import { TutorPage } from "@/app/components/aceley-pages";
+import { TutorPicker } from "@/app/components/tutor-pages";
 
 export default function Page() {
   return (
     <AppLayout>
-      <TutorPage />
+      <TutorPicker />
     </AppLayout>
   );
 }

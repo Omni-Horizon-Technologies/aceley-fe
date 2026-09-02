@@ -1,8 +1,33 @@
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
-  "http://localhost:8000/api/v1";
+const API_BASE = (
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/v1`
+).replace(/\/$/, "");
 
 const AUTH_STORAGE_KEY = "aceley:v1:auth";
+const MODERN_AUTH_STORAGE_KEY = "aceley:auth:v1";
+
+function readAccessToken(): string | null {
+  try {
+    // AuthForm persists the Zustand store as { state: { tokens: ... } }.
+    const modernRaw = localStorage.getItem(MODERN_AUTH_STORAGE_KEY);
+    if (modernRaw) {
+      const modern = JSON.parse(modernRaw) as {
+        state?: { tokens?: { access_token?: string } };
+      };
+      const token = modern.state?.tokens?.access_token;
+      if (token) return token;
+    }
+
+    // Keep compatibility with the original auth provider format.
+    const legacyRaw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (legacyRaw) {
+      return (JSON.parse(legacyRaw) as { token?: string }).token ?? null;
+    }
+  } catch {
+    // Ignore malformed or unavailable browser storage.
+  }
+  return null;
+}
 
 /**
  * Wrapper around fetch that adds the Bearer token from localStorage.
@@ -12,15 +37,7 @@ export async function apiFetch(
   path: string,
   options: RequestInit = {},
 ): Promise<Response> {
-  let token: string | null = null;
-  try {
-    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (raw) {
-      token = (JSON.parse(raw) as { token?: string }).token ?? null;
-    }
-  } catch {
-    // ignore
-  }
+  const token = readAccessToken();
 
   const headers = new Headers(options.headers);
   if (token) {
@@ -35,8 +52,9 @@ export async function apiFetch(
   // If backend returns 401, clear stored auth and redirect to login
   if (res.status === 401) {
     localStorage.removeItem(AUTH_STORAGE_KEY);
-    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
-      window.location.href = "/auth/login";
+    localStorage.removeItem(MODERN_AUTH_STORAGE_KEY);
+    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/sign-in")) {
+      window.location.href = "/sign-in";
     }
   }
 

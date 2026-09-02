@@ -47,6 +47,7 @@ import {
   fetchSpaces,
   generateFlashcards,
   generateQuiz,
+  fetchQuiz,
   generateStudyPack,
   recordStudySession,
   scanUpload,
@@ -2842,7 +2843,7 @@ function ListSection({ title, items, empty }: { title: string; items: string[]; 
   );
 }
 
-export function QuizPage({ topic: topicProp }: { topic?: string } = {}) {
+export function QuizPage({ topic: topicProp, quizId }: { topic?: string; quizId?: string } = {}) {
   const router = useRouter();
   const [quiz, setQuiz] = useState<{
     id: string;
@@ -2858,19 +2859,23 @@ export function QuizPage({ topic: topicProp }: { topic?: string } = {}) {
 
   useEffect(() => {
     let cancelled = false;
-    generateQuiz(resolvedTopic, 5)
-      .then((data) => { if (!cancelled) setQuiz(data); })
+    const request = quizId ? fetchQuiz(quizId) : generateQuiz(resolvedTopic, 5);
+    request
+      .then((data) => { if (!cancelled) setQuiz({ ...data, topic: data.topic ?? ("title" in data ? data.title : undefined) ?? resolvedTopic }); })
       .catch((err: Error) => { if (!cancelled) setError(err.message); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [resolvedTopic]);
+  }, [quizId, resolvedTopic]);
 
   if (loading) {
     return (
-        <div className="space-y-5">
-          <SectionTitle title="Quiz" />
-          <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
-            <p className="text-sm font-black text-slate-500">Generating quiz on {resolvedTopic}...</p>
+        <div className="mx-auto max-w-3xl space-y-6" aria-label="Loading quiz">
+          <div className="flex items-center justify-between"><div className="h-11 w-11 animate-pulse rounded-full bg-slate-200" /><div className="h-8 w-28 animate-pulse rounded-full bg-slate-200" /></div>
+          <div className="h-2 animate-pulse rounded-full bg-slate-200" />
+          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:p-9">
+            <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+            <div className="mt-6 h-8 w-4/5 animate-pulse rounded bg-slate-200" />
+            <div className="mt-8 space-y-3">{[0, 1, 2, 3].map((item) => <div className="h-16 animate-pulse rounded-2xl bg-slate-100" key={item} />)}</div>
           </div>
         </div>
     );
@@ -2878,12 +2883,11 @@ export function QuizPage({ topic: topicProp }: { topic?: string } = {}) {
 
   if (error || !quiz || !quiz.questions.length) {
     return (
-        <div className="space-y-5">
-          <SectionTitle title="Quiz" />
-          <div className="rounded-lg border border-red-200 bg-red-50 p-5 text-center">
-            <p className="text-sm font-black text-red-700">{error || "No questions generated"}</p>
-          </div>
-          <SecondaryButton href="/">Back to home</SecondaryButton>
+        <div className="mx-auto max-w-xl py-12 text-center">
+          <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-red-50 text-red-600"><Icon name="warning" className="h-7 w-7" /></span>
+          <h1 className="mt-5 text-2xl font-black">We couldn&apos;t load this quiz</h1>
+          <p className="mt-2 text-sm font-semibold text-slate-500">{error || "No questions were generated."}</p>
+          <SecondaryButton className="mt-6" href="/dashboard">Back to dashboard</SecondaryButton>
         </div>
     );
   }
@@ -2900,8 +2904,7 @@ export function QuizPage({ topic: topicProp }: { topic?: string } = {}) {
 
   function next() {
     if (index + 1 >= quiz!.questions.length) {
-      const finalScore = score + (selected === current.correct_index ? 1 : 0);
-      router.push(`/quiz/result?score=${finalScore}&total=${quiz!.questions.length}&title=${encodeURIComponent(quiz!.topic)}`);
+      router.push(`/quiz/result?score=${score}&total=${quiz!.questions.length}&title=${encodeURIComponent(quiz!.topic)}`);
       return;
     }
     setIndex((value) => value + 1);
@@ -2909,46 +2912,57 @@ export function QuizPage({ topic: topicProp }: { topic?: string } = {}) {
   }
 
   return (
-      <div className="space-y-5">
-        <div className="flex items-center justify-between">
-          <SectionTitle title={quiz.topic} />
-          <span className="rounded-lg bg-white px-3 py-2 text-sm font-black shadow-sm">{index + 1}/{quiz.questions.length}</span>
+      <div className="mx-auto max-w-3xl space-y-6">
+        <header className="flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <BackButton fallbackHref="/dashboard" />
+            <div className="min-w-0">
+              <p className="text-[11px] font-black uppercase tracking-[.18em] text-[#CA8A04]">Quick practice</p>
+              <h1 className="truncate text-xl font-black text-[#0F1626] sm:text-2xl">{quiz.topic}</h1>
+            </div>
+          </div>
+          <span className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-[#312E81] shadow-sm"><span className="text-slate-400">{index + 1}</span> / {quiz.questions.length}</span>
+        </header>
+        <div>
+          <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-500"><span>{Math.round(((index + (selected !== null ? 1 : 0)) / quiz.questions.length) * 100)}% complete</span><span>{score} correct</span></div>
+          <div className="h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-gradient-to-r from-[#312E81] to-[#818CF8] transition-all duration-500" style={{ width: `${((index + (selected !== null ? 1 : 0)) / quiz.questions.length) * 100}%` }} /></div>
         </div>
-        <ProgressBar value={(index / quiz.questions.length) * 100} />
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-black leading-tight">{current.question}</h2>
-          <div className="mt-5 space-y-3">
+        <section className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_50px_rgba(30,27,75,0.08)] sm:p-9">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#EEF2FF]" />
+          <p className="relative text-xs font-black uppercase tracking-[.16em] text-[#818CF8]">Question {index + 1}</p>
+          <h2 className="relative mt-4 max-w-2xl text-xl font-black leading-snug text-[#0F1626] sm:text-2xl">{current.question}</h2>
+          <div className="relative mt-7 space-y-3">
             {current.options.map((option: string, optionIndex: number) => {
               const correct = optionIndex === current.correct_index;
               const chosen = selected === optionIndex;
               return (
                 <button
                   className={cn(
-                    "min-h-12 w-full rounded-lg border px-4 text-left text-sm font-black",
-                    selected === null && "border-slate-200 bg-[#F8FAFC]",
-                    selected !== null && correct && "border-emerald-300 bg-emerald-50 text-emerald-700",
+                    "group flex min-h-16 w-full items-center gap-4 rounded-2xl border-2 px-4 text-left text-sm font-bold transition-all duration-200 sm:px-5",
+                    selected === null && "border-slate-200 bg-[#F8FAFC] hover:-translate-y-0.5 hover:border-[#818CF8] hover:bg-[#EEF2FF]/60",
+                    selected !== null && correct && "border-emerald-400 bg-emerald-50 text-emerald-800",
                     selected !== null && chosen && !correct && "border-red-300 bg-red-50 text-red-700",
-                    selected !== null && !chosen && !correct && "border-slate-200 bg-white text-slate-500",
+                    selected !== null && !chosen && !correct && "border-slate-100 bg-white text-slate-400",
                   )}
                   key={option}
                   onClick={() => choose(optionIndex)}
                   type="button"
                 >
-                  {option}
+                  <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-xl border text-xs font-black", selected === null && "border-slate-200 bg-white text-slate-500 group-hover:border-[#818CF8] group-hover:text-[#312E81]", selected !== null && correct && "border-emerald-500 bg-emerald-500 text-white", selected !== null && chosen && !correct && "border-red-400 bg-red-400 text-white", selected !== null && !chosen && !correct && "border-slate-100 bg-slate-50")}>{selected !== null && correct ? <Icon name="check" className="h-4 w-4" /> : String.fromCharCode(65 + optionIndex)}</span>
+                  <span className="flex-1">{option}</span>
+                  {selected !== null && chosen && !correct ? <Icon name="x" className="h-5 w-5" /> : null}
                 </button>
               );
             })}
           </div>
           {selected !== null ? (
-            <div className="mt-5 rounded-lg bg-[#FEFCE8] p-4 text-sm font-semibold text-[#1E1B4B]">
-              {selected === current.correct_index ? "Correct. " : "Not quite. "}
-              {current.explanation}
+            <div className={cn("mt-6 rounded-2xl border p-4 sm:p-5", selected === current.correct_index ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50")}>
+              <p className={cn("font-black", selected === current.correct_index ? "text-emerald-800" : "text-amber-800")}>{selected === current.correct_index ? "Nice work — that's right." : "Not quite — here's the key idea."}</p>
+              <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">{current.explanation}</p>
             </div>
           ) : null}
         </section>
-        <PrimaryButton className="w-full" disabled={selected === null} onClick={next}>
-          {index + 1 >= quiz.questions.length ? "Finish" : "Next"}
-        </PrimaryButton>
+        <div className="flex justify-end"><PrimaryButton className="w-full rounded-2xl px-8 sm:w-auto" disabled={selected === null} onClick={next}>{index + 1 >= quiz.questions.length ? "See my results" : "Next question"}<Icon name="chevronRight" className="h-4 w-4" /></PrimaryButton></div>
       </div>
   );
 }

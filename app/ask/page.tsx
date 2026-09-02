@@ -1,12 +1,12 @@
 "use client";
 
 import { AppLayout } from "@/app/components/app-layout";
-import { AskPage } from "@/app/components/aceley-pages";
+import { AskHub } from "@/app/components/ask-pages";
 
 export default function Page() {
   return (
     <AppLayout>
-      <AskPage />
+      <AskHub />
     </AppLayout>
   );
 }
