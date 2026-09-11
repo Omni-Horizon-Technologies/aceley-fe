@@ -84,7 +84,7 @@ export async function explainTopic(topic: string, style: string, context?: strin
 // ── Quiz ───────────────────────────────────────────────
 
 export async function generateQuiz(topic: string, numQuestions = 5) {
-  const res = await apiFetch("/learning/quizzes", {
+  const res = await apiFetch("/quizzes", {
     method: "POST",
     body: JSON.stringify({ topic, num_questions: numQuestions }),
   });
@@ -92,6 +92,17 @@ export async function generateQuiz(topic: string, numQuestions = 5) {
   return res.json() as Promise<{
     id: string;
     topic: string;
+    questions: { question: string; options: string[]; correct_index: number; explanation: string }[];
+  }>;
+}
+
+export async function fetchQuiz(quizId: string) {
+  const res = await apiFetch(`/quizzes/${encodeURIComponent(quizId)}`);
+  if (!res.ok) throw new Error("Failed to load quiz");
+  return res.json() as Promise<{
+    id: string;
+    topic?: string;
+    title?: string;
     questions: { question: string; options: string[]; correct_index: number; explanation: string }[];
   }>;
 }

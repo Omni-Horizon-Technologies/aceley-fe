@@ -1,9 +1,10 @@
 "use client";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppStateProvider } from "@/lib/state";
 import { AuthProvider as LegacyAuthProvider } from "@/lib/auth";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 const rawGoogleClientId =
   process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID ??
@@ -27,11 +28,15 @@ if (!isGoogleAuthConfigured && process.env.NODE_ENV === "development") {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <LegacyAuthProvider>
-        <AppStateProvider>{children}</AppStateProvider>
-      </LegacyAuthProvider>
-    </GoogleOAuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <GoogleOAuthProvider clientId={googleClientId}>
+        <LegacyAuthProvider>
+          <AppStateProvider>{children}</AppStateProvider>
+        </LegacyAuthProvider>
+      </GoogleOAuthProvider>
+    </QueryClientProvider>
   );
 }

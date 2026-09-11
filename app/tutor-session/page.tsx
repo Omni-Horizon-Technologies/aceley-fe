@@ -1,0 +1,1 @@
+"use client";import{Suspense}from"react";import{AppLayout}from"@/app/components/app-layout";import{TutorSessionPage}from"@/app/components/tutor-pages";export default function Page(){return <AppLayout><Suspense fallback={<div className="h-80 animate-pulse rounded-3xl bg-slate-200"/>}><TutorSessionPage/></Suspense></AppLayout>}

@@ -1,12 +1,12 @@
 "use client";
 
 import { AppLayout } from "@/app/components/app-layout";
-import { TestPrepPage } from "@/app/components/aceley-pages";
+import { TestPrepPicker } from "@/app/components/test-prep-pages";
 
 export default function Page() {
   return (
     <AppLayout>
-      <TestPrepPage />
+      <TestPrepPicker />
     </AppLayout>
   );
 }
