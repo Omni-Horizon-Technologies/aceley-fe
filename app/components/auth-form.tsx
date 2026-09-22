@@ -9,6 +9,8 @@ import { AppleIcon, GoogleIcon } from "@/app/components/icons/icons";
 import { isGoogleAuthConfigured } from "@/app/providers";
 import { useAuth } from "@/services/hooks/useAuth";
 import {
+  ACCOUNT_DELETED_MESSAGE,
+  isAccountDeletedError,
   nextOnboardingStep,
   requestMagicLink,
   signInWithApple,
@@ -120,11 +122,15 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
         routeAfterSignIn(response);
       } catch (err) {
         setStatus("error");
-        setErrorMessage(
-          err instanceof ApiError
-            ? "Google sign-in failed. Please try again."
-            : "Couldn’t reach the server. Check your connection and try again.",
-        );
+        if (isAccountDeletedError(err)) {
+          setErrorMessage(ACCOUNT_DELETED_MESSAGE);
+        } else {
+          setErrorMessage(
+            err instanceof ApiError
+              ? "Google sign-in failed. Please try again."
+              : "Couldn’t reach the server. Check your connection and try again.",
+          );
+        }
       }
     },
     [routeAfterSignIn],
@@ -171,7 +177,10 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
       // friendly message instead of silently returning to idle.
       const message = err instanceof Error ? err.message : String(err);
       console.error("[apple-signin]", err);
-      if (err instanceof ApiError) {
+      if (isAccountDeletedError(err)) {
+        setStatus("error");
+        setErrorMessage(ACCOUNT_DELETED_MESSAGE);
+      } else if (err instanceof ApiError) {
         setStatus("error");
         setErrorMessage("Apple sign-in failed. Please try again.");
       } else if (message.includes("popup_closed_by_user") || message.includes("user_cancelled_authorize")) {
@@ -199,9 +208,13 @@ export function AuthForm({ mode = "login" }: { mode?: "login" | "signup" }) {
       await requestMagicLink(trimmed);
       setSentToEmail(trimmed);
       setStatus("email-sent");
-    } catch {
+    } catch (err) {
       setStatus("error");
-      setErrorMessage("We couldn’t send your link. Please try again.");
+      if (isAccountDeletedError(err)) {
+        setErrorMessage(ACCOUNT_DELETED_MESSAGE);
+      } else {
+        setErrorMessage("We couldn’t send your link. Please try again.");
+      }
     }
   }
 

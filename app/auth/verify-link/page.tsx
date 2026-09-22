@@ -4,7 +4,12 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon, PrimaryButton } from "@/app/components/ui";
 import { useAuth } from "@/services/hooks/useAuth";
-import { nextOnboardingStep, verifyMagicLink } from "@/services/modules/auth";
+import {
+  ACCOUNT_DELETED_MESSAGE,
+  isAccountDeletedError,
+  nextOnboardingStep,
+  verifyMagicLink,
+} from "@/services/modules/auth";
 import { ApiError } from "@/services/apiClient";
 
 type Status = "verifying" | "error";
@@ -50,7 +55,9 @@ function VerifyLinkClient() {
         router.replace(nextOnboardingStep(response.profile));
       } catch (err) {
         setStatus("error");
-        if (err instanceof ApiError && typeof err.data === "object" && err.data !== null && "detail" in err.data) {
+        if (isAccountDeletedError(err)) {
+          setErrorMessage(ACCOUNT_DELETED_MESSAGE);
+        } else if (err instanceof ApiError && typeof err.data === "object" && err.data !== null && "detail" in err.data) {
           setErrorMessage(String((err.data as { detail: unknown }).detail));
         } else {
           setErrorMessage("Your sign-in link is invalid or has expired.");

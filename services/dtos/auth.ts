@@ -9,6 +9,33 @@ export type ReferralSource =
   | "google"
   | "other";
 
+export type StudyLevel =
+  | "elementary"
+  | "middle_school"
+  | "high_school"
+  | "high_school_diploma"
+  | "first_year_college"
+  | "second_year_college"
+  | "third_year_college"
+  | "fourth_year_college"
+  | "masters"
+  | "phd"
+  | "other";
+
+export type MainGoal =
+  | "pass_exams"
+  | "upgrade_skills"
+  | "general_learning"
+  | "career_switch";
+
+export type DailyStudyFrequency =
+  | "mins_15"
+  | "mins_30"
+  | "mins_45"
+  | "mins_60"
+  | "mins_90"
+  | "mins_120_plus";
+
 export interface Profile {
   id: string;
   email: string;
@@ -21,6 +48,11 @@ export interface Profile {
   major: string | null;
   grade: string | null;
   avatar_url: string | null;
+  study_language: string | null;
+  study_level: StudyLevel | null;
+  main_goal: MainGoal | null;
+  daily_study_frequency: DailyStudyFrequency | null;
+  study_reminder_hour: number | null;
   referral_source: ReferralSource | null;
   referral_other_text: string | null;
   onboarded_at: string | null;
@@ -99,6 +131,11 @@ export interface PatchProfileRequest {
   major?: string | null;
   grade?: string | null;
   avatar_url?: string | null;
+  study_language?: string | null;
+  study_level?: StudyLevel | null;
+  main_goal?: MainGoal | null;
+  daily_study_frequency?: DailyStudyFrequency | null;
+  study_reminder_hour?: number | null;
 }
 
 export interface CompleteOnboardingRequest {

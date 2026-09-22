@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { AppLayout } from "@/app/components/app-layout";
+import { LottieMascot } from "@/app/components/lottie-mascot";
 import { Icon, PrimaryButton, SecondaryButton, cn } from "@/app/components/ui";
 import { useAuth } from "@/services/hooks/useAuth";
+import { useCredits } from "@/services/hooks/useCredits";
 import type { Profile } from "@/services/dtos/auth";
 
 function initials(name: string): string {
@@ -72,8 +75,30 @@ function ProfileDetails({ profile }: { profile: Profile }) {
   );
 }
 
+function PremiumCard() {
+  return (
+    <Link
+      href="/paywall"
+      className="relative flex min-h-[84px] items-center justify-between gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-[#1E1B4B] to-[#312E81] px-5 py-4 text-white shadow-[0_12px_30px_rgba(30,27,75,0.25)] transition hover:shadow-[0_18px_40px_rgba(30,27,75,0.32)]"
+    >
+      <div className="min-w-0">
+        <p className="text-[11px] font-black uppercase tracking-[.16em] text-[#FACC15]">Aceley Pro</p>
+        <p className="mt-1 text-base font-black tracking-tight">Get premium access</p>
+        <p className="mt-0.5 text-xs font-semibold text-white/80">Tap to claim ›</p>
+      </div>
+      <LottieMascot name="mascot_celebrate" className="h-16 w-16 shrink-0" sizeLabel="Celebrate" />
+      <span
+        aria-hidden="true"
+        className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/[0.08] blur-xl"
+      />
+    </Link>
+  );
+}
+
 function ProfilePageContent() {
   const { profile, user, hasHydrated, signOut } = useAuth();
+  const { data: credits } = useCredits();
+  const isPremium = credits?.is_unlimited || (credits?.tier && credits.tier !== "none") || profile?.is_premium;
 
   if (!hasHydrated) {
     return (
@@ -151,6 +176,8 @@ function ProfilePageContent() {
           <SecondaryButton href="/onboarding/name">Edit profile</SecondaryButton>
         </div>
       </section>
+
+      {!isPremium ? <PremiumCard /> : null}
 
       <ProfileDetails profile={profile} />
 

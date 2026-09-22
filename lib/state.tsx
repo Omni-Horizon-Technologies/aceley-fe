@@ -22,6 +22,14 @@ export type Answers = {
   schoolCountry: string;
   major: string;
   source: string;
+  // 8-step onboarding (mobile parity)
+  studyLanguage: string;
+  studyLevel: string;
+  mainGoal: string;
+  dailyFrequency: string;
+  reminderHour: string;
+  referralSource: string;
+  referralOtherText: string;
   subject: string;
   level: string;
   exam: string;
@@ -135,6 +143,13 @@ export const defaultAnswers: Answers = {
   schoolCountry: "",
   major: "",
   source: "",
+  studyLanguage: "en_US",
+  studyLevel: "",
+  mainGoal: "",
+  dailyFrequency: "",
+  reminderHour: "",
+  referralSource: "",
+  referralOtherText: "",
   subject: "Biology",
   level: "High school",
   exam: "",
@@ -204,6 +219,13 @@ function mergeState(value: unknown): AppState {
       schoolCountry: stringOr(storedAnswers.schoolCountry),
       major: stringOr(storedAnswers.major),
       source: stringOr(storedAnswers.source),
+      studyLanguage: stringOr(storedAnswers.studyLanguage, defaultAnswers.studyLanguage),
+      studyLevel: stringOr(storedAnswers.studyLevel),
+      mainGoal: stringOr(storedAnswers.mainGoal),
+      dailyFrequency: stringOr(storedAnswers.dailyFrequency),
+      reminderHour: stringOr(storedAnswers.reminderHour),
+      referralSource: stringOr(storedAnswers.referralSource),
+      referralOtherText: stringOr(storedAnswers.referralOtherText),
       subject: stringOr(storedAnswers.subject, defaultAnswers.subject),
       level: stringOr(storedAnswers.level, defaultAnswers.level),
       exam: stringOr(storedAnswers.exam),

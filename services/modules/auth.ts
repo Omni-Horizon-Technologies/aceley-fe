@@ -1,4 +1,4 @@
-import { apiClient } from "@/services/apiClient";
+import { ApiError, apiClient } from "@/services/apiClient";
 import type {
   AppleSignInRequest,
   AppleUserInfo,
@@ -95,22 +95,43 @@ export function completeOnboarding(
 }
 
 /**
+ * Detects the backend's account_deleted 403 envelope so every sign-in path
+ * (Google, Apple, magic-link request + verify) can surface the same message.
+ */
+export function isAccountDeletedError(err: unknown): boolean {
+  if (!(err instanceof ApiError)) return false;
+  if (err.status !== 403) return false;
+  if (err.data && typeof err.data === "object" && (err.data as { code?: string }).code === "account_deleted") {
+    return true;
+  }
+  return false;
+}
+
+export const ACCOUNT_DELETED_MESSAGE =
+  "Account deleted — This account has been deleted. Contact support to restore.";
+
+/**
  * Resume-check: given a profile, return the route the user should be on.
- * Mirrors the mobile spec exactly:
- *   onboarded_at → /dashboard
- *   !nickname    → step 1
- *   !country || age == null → step 2
- *   !school_name → step 3
- *   !major       → step 4
- *   else         → step 5
+ * 8-step flow mirroring mobile:
+ *   0: study_language → /onboarding/language
+ *   1: nickname → /onboarding/name
+ *   2: age → /onboarding/age
+ *   3: study_level → /onboarding/study-level
+ *   4: main_goal → /onboarding/goal
+ *   5: daily_study_frequency → /onboarding/frequency
+ *   6: study_reminder_hour → /onboarding/reminder
+ *   7: referral_source (final; also writes onboarded_at) → /onboarding/referral
  */
 export function nextOnboardingStep(profile: Profile): string {
   if (profile.onboarded_at) return "/dashboard";
+  if (!profile.study_language) return "/onboarding/language";
   if (!profile.nickname) return "/onboarding/name";
-  if (!profile.country || profile.age === null || profile.age === undefined) {
-    return "/onboarding/about";
+  if (profile.age === null || profile.age === undefined) return "/onboarding/age";
+  if (!profile.study_level) return "/onboarding/study-level";
+  if (!profile.main_goal) return "/onboarding/goal";
+  if (!profile.daily_study_frequency) return "/onboarding/frequency";
+  if (profile.study_reminder_hour === null || profile.study_reminder_hour === undefined) {
+    return "/onboarding/reminder";
   }
-  if (!profile.school_name) return "/onboarding/school";
-  if (!profile.major) return "/onboarding/major";
-  return "/onboarding/source";
+  return "/onboarding/referral";
 }

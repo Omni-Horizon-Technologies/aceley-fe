@@ -4,6 +4,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppStateProvider } from "@/lib/state";
 import { AuthProvider as LegacyAuthProvider } from "@/lib/auth";
+import { InsufficientCreditsSheet } from "@/app/components/insufficient-credits-sheet";
 import { useState, type ReactNode } from "react";
 
 const rawGoogleClientId =
@@ -34,7 +35,10 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <GoogleOAuthProvider clientId={googleClientId}>
         <LegacyAuthProvider>
-          <AppStateProvider>{children}</AppStateProvider>
+          <AppStateProvider>
+            {children}
+            <InsufficientCreditsSheet />
+          </AppStateProvider>
         </LegacyAuthProvider>
       </GoogleOAuthProvider>
     </QueryClientProvider>

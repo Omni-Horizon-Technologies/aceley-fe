@@ -50,11 +50,18 @@ export async function apiFetch(
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
   // If backend returns 401, clear stored auth and redirect to login
+  // — but never bounce users out of public routes (landing, sign-up, legal).
   if (res.status === 401) {
     localStorage.removeItem(AUTH_STORAGE_KEY);
     localStorage.removeItem(MODERN_AUTH_STORAGE_KEY);
-    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/sign-in")) {
-      window.location.href = "/sign-in";
+    if (typeof window !== "undefined") {
+      const p = window.location.pathname;
+      const isPublic =
+        p === "/" ||
+        ["/sign-in", "/sign-up", "/auth", "/terms", "/privacy", "/pricing", "/landing"].some(
+          (base) => p === base || p.startsWith(`${base}/`),
+        );
+      if (!isPublic) window.location.href = "/sign-in";
     }
   }
 

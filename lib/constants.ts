@@ -180,9 +180,11 @@ export const FOCUS_AUDIO = [
   { id: "cafe", label: "Library cafe" },
 ] as const;
 
+// Tier IDs mirror the backend Tier enum: none | small | best | unlimited.
 export const PAYWALL_PLANS = [
-  { id: "monthly", label: "Monthly", price: "$14.99/mo", cadence: "Flexible access" },
-  { id: "yearly", label: "Yearly", price: "$97.99/yr", cadence: "Best value", badge: "Most Popular" },
+  { id: "small", label: "2000 credits", price: "$9.99 / mo", cadence: "Billed monthly" },
+  { id: "best", label: "4000 credits", price: "$5.83 / mo", cadence: "Billed $69.99/year", badge: "Save 42%" },
+  { id: "unlimited", label: "Unlimited", price: "$23 / mo", cadence: "Billed monthly" },
 ] as const;
 
 export const PAYWALL_FEATURES = [

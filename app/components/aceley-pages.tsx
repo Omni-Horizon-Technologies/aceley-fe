@@ -17,6 +17,7 @@ import { BackButton } from "@/app/components/back-button";
 import { AuthForm } from "@/app/components/auth-form";
 import { AceleyAPlusIcon } from "@/app/components/icons/icons";
 import { LottieMascot } from "@/app/components/lottie-mascot";
+import { useCredits } from "@/services/hooks/useCredits";
 import {
   BrandMark,
   cn,
@@ -452,8 +453,8 @@ export function OnboardingProfileReadyPage() {
         </div>
         <p className="mt-5 text-center text-xs leading-5 text-slate-500">
           By continuing, you accept Aceley&apos;s{" "}
-          <span className="font-bold text-[#312E81]">Terms</span> /{" "}
-          <span className="font-bold text-[#312E81]">Privacy</span>
+          <Link className="font-bold text-[#312E81] hover:text-[#CA8A04]" href="/terms">Terms</Link> /{" "}
+          <Link className="font-bold text-[#312E81] hover:text-[#CA8A04]" href="/privacy">Privacy</Link>
         </p>
         <p className="mt-4 text-center text-sm font-semibold text-slate-500">
           Already have an account?{" "}
@@ -1038,7 +1039,15 @@ export function OnboardingSourcePage() {
 export function PaywallPage() {
   const router = useRouter();
   const { hydrated, onboarded } = useAppState();
-  const [selected, setSelected] = useState("yearly");
+  const { data: credits } = useCredits();
+  const currentTier = credits?.tier;
+  const isUnlimited = credits?.is_unlimited ?? false;
+  const [selected, setSelected] = useState<string>(
+    currentTier && currentTier !== "none" ? currentTier : "best",
+  );
+  useEffect(() => {
+    if (currentTier && currentTier !== "none") setSelected(currentTier);
+  }, [currentTier]);
   const goHome = () => router.replace("/dashboard");
 
   return (
@@ -1062,6 +1071,11 @@ export function PaywallPage() {
             <p className="mt-3 text-sm leading-6 text-slate-600">
               Unlimited answers, study packs, quizzes, and revision tools in one place.
             </p>
+            {isUnlimited ? (
+              <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm font-black text-[#CA8A04]">
+                You&rsquo;re on the Unlimited plan. Thanks for the ride 🎉
+              </div>
+            ) : null}
             <div className="mt-7 grid gap-3">
               {PAYWALL_PLANS.map((plan) => (
                 <button
@@ -1076,6 +1090,11 @@ export function PaywallPage() {
                   {"badge" in plan && plan.badge ? (
                     <span className="absolute -top-3 right-4 rounded-lg bg-[#FACC15] px-3 py-1 text-xs font-black text-[#1E1B4B]">
                       {plan.badge}
+                    </span>
+                  ) : null}
+                  {currentTier === plan.id ? (
+                    <span className="absolute -top-3 left-4 rounded-lg bg-[#312E81] px-3 py-1 text-[10px] font-black uppercase tracking-[.14em] text-white">
+                      Current plan
                     </span>
                   ) : null}
                   <span className="flex items-center justify-between gap-3">
@@ -1109,16 +1128,28 @@ export function PaywallPage() {
         </div>
         <footer className="sticky bottom-0 border-t border-slate-200 bg-white px-4 py-4 shadow-[0_-8px_24px_rgba(30,27,75,0.08)] sm:px-6">
           <div className="mx-auto max-w-md">
-            <button className="min-h-12 w-full rounded-lg bg-[#FACC15] px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm" type="button">
-              Start your 7 day free trial
-            </button>
-            <button
-              className="mt-3 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:border-[#312E81]/30 hover:bg-slate-50"
-              onClick={goHome}
-              type="button"
-            >
-              Continue without Pro
-            </button>
+            {isUnlimited ? (
+              <button
+                className="min-h-12 w-full rounded-lg bg-[#F8FAFC] px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:bg-slate-100"
+                onClick={goHome}
+                type="button"
+              >
+                Back to Aceley
+              </button>
+            ) : (
+              <>
+                <button className="min-h-12 w-full rounded-lg bg-[#FACC15] px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm" type="button">
+                  Start your 7 day free trial
+                </button>
+                <button
+                  className="mt-3 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#1E1B4B] shadow-sm transition hover:border-[#312E81]/30 hover:bg-slate-50"
+                  onClick={goHome}
+                  type="button"
+                >
+                  Continue without Pro
+                </button>
+              </>
+            )}
             {hydrated && !onboarded ? (
               <button
                 className="mt-3 min-h-11 w-full rounded-lg bg-[#F8FAFC] px-5 py-3 text-sm font-black text-slate-600 transition hover:bg-slate-100 hover:text-[#312E81]"
@@ -1129,9 +1160,9 @@ export function PaywallPage() {
               </button>
             ) : null}
             <div className="mt-3 flex justify-center gap-4 text-xs font-bold text-slate-500">
-              <span>Privacy</span>
+              <Link className="hover:text-[#CA8A04]" href="/privacy">Privacy</Link>
               <span>Restore</span>
-              <span>Terms</span>
+              <Link className="hover:text-[#CA8A04]" href="/terms">Terms</Link>
             </div>
           </div>
         </footer>
@@ -2188,26 +2219,28 @@ export function CoachPage() {
   return (
       <div className="space-y-6">
         <SectionTitle eyebrow="Coach" title="Your study plan" />
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start gap-4">
-            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-[#312E81] text-lg font-black text-white">
+        <section className="relative overflow-hidden rounded-lg bg-gradient-to-r from-[#312E81] to-[#1E1B4B] p-5 text-white shadow-sm">
+          <div className="relative z-[1] flex items-start gap-4">
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-white/[0.18] text-lg font-black text-white">
               C
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#CA8A04]">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#FACC15]">
                 Study Coach
               </p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-[#1E1B4B]">
+              <h2 className="mt-1 text-2xl font-black tracking-tight">
                 {plan ? "Keep your sprint moving" : "Build a plan that fits your exam"}
               </h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
+              <p className="mt-2 text-sm font-semibold leading-6 text-white/78">
                 {plan
                   ? `Coach is tracking ${plan.subject} and keeping today focused.`
                   : "Coach turns your goal, time, and materials into a simple sprint you can follow."}
               </p>
             </div>
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <span aria-hidden="true" className="absolute -right-6 -top-8 h-32 w-32 rounded-full bg-white/[0.08] blur-2xl" />
+          <span aria-hidden="true" className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/[0.06] blur-2xl" />
+          <div className="relative z-[1] mt-5 grid gap-3 sm:grid-cols-2">
             <Link
               className="rounded-lg border border-slate-200 bg-[#F8FAFC] p-4 shadow-sm transition hover:border-[#FACC15]/70"
               href="/plan/new"

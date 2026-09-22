@@ -134,6 +134,23 @@ export class ApiClient {
       } catch {
         // ignore body parse errors on failed responses
       }
+
+      // 402 → surface insufficient_credits globally so a single sheet handles all mutations.
+      if (
+        res.status === 402 &&
+        typeof window !== "undefined" &&
+        errorBody &&
+        typeof errorBody === "object" &&
+        (errorBody as { code?: string }).code === "insufficient_credits"
+      ) {
+        const details = (errorBody as { details?: { required?: number; available?: number } }).details ?? {};
+        window.dispatchEvent(
+          new CustomEvent("aceley:insufficient-credits", {
+            detail: { required: details.required ?? 0, available: details.available ?? 0 },
+          }),
+        );
+      }
+
       throw new ApiError(res.status, res.statusText, errorBody);
     }
 
@@ -195,10 +212,17 @@ function readTokenFromStorage(): string | null {
   }
 }
 
+const PUBLIC_PATHS = ["/auth", "/sign-in", "/sign-up", "/terms", "/privacy", "/pricing", "/landing"];
+
+function isPublicPath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 function handleUnauthorized(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
-  if (!window.location.pathname.startsWith("/auth") && !window.location.pathname.startsWith("/sign-in")) {
+  if (!isPublicPath(window.location.pathname)) {
     window.location.href = "/sign-in";
   }
 }

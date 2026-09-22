@@ -1326,9 +1326,9 @@ export default function LandingPage() {
         <div className="mx-auto mt-10 flex max-w-[1200px] flex-wrap items-center justify-between gap-4 border-t border-white/12 pt-6 sm:mt-13">
           <p className="text-[12.5px] font-semibold text-white/50">© 2026 Aceley. All rights reserved.</p>
           <div className="flex flex-wrap gap-5">
-            <Link href="/paywall" className="text-[12.5px] font-bold text-white/60 transition hover:text-[#FACC15]">Privacy</Link>
-            <Link href="/paywall" className="text-[12.5px] font-bold text-white/60 transition hover:text-[#FACC15]">Terms</Link>
-            <Link href="/paywall" className="text-[12.5px] font-bold text-white/60 transition hover:text-[#FACC15]">Restore purchase</Link>
+            <Link href="/privacy" className="text-[12.5px] font-bold text-white/60 transition hover:text-[#FACC15]">Privacy</Link>
+            <Link href="/terms" className="text-[12.5px] font-bold text-white/60 transition hover:text-[#FACC15]">Terms</Link>
+            <Link href="/pricing" className="text-[12.5px] font-bold text-white/60 transition hover:text-[#FACC15]">Restore purchase</Link>
           </div>
           <div className="flex gap-2.5">
             <a href="#" aria-label="Instagram" className="grid h-[38px] w-[38px] place-items-center rounded-xl bg-white/8 text-white transition hover:bg-[#FACC15] hover:text-[#1E1B4B]">
