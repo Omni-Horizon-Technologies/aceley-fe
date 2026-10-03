@@ -261,28 +261,25 @@ const faqs = [
   },
 ];
 
-const productLinks = [
-  { label: "AI Tutor", href: "#tools" },
-  { label: "Flashcards", href: "#tools" },
-  { label: "Quizzes", href: "#tools" },
-  { label: "Scan & solve", href: "#tools" },
-  { label: "Focus mode", href: "#tools" },
-];
+type FooterLink = { label: string; href: string; external?: boolean };
 
-const studyLinks = [
+const sectionsLinks: FooterLink[] = [
   { label: "How it works", href: "#tools" },
-  { label: "Class spaces", href: "/spaces" },
-  { label: "Study plans", href: "/plan/new" },
-  { label: "Test prep", href: "/test-prep" },
-  { label: "Pricing", href: "/pricing" },
+  { label: "Testimonials", href: "#testimonials" },
+  { label: "FAQ", href: "#faq" },
+  { label: "Download", href: "/download" },
 ];
 
-const companyLinks = [
-  { label: "About", href: "#" },
-  { label: "Careers", href: "#" },
-  { label: "Blog", href: "#" },
-  { label: "Help center", href: "#" },
-  { label: "Contact", href: "#" },
+const socialsLinks: FooterLink[] = [
+  { label: "Instagram", href: "https://instagram.com/", external: true },
+  { label: "Discord", href: "https://discord.com/", external: true },
+  { label: "TikTok", href: "https://tiktok.com/", external: true },
+  { label: "Articles", href: "/articles" },
+];
+
+const legalLinks: FooterLink[] = [
+  { label: "Privacy policy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
 ];
 
 type LandingPlan = {
@@ -301,53 +298,55 @@ type LandingPlan = {
 
 const pricingPlans: LandingPlan[] = [
   {
-    name: "Free",
-    price: "$0",
-    cadence: "/month",
-    description: "Perfect for students trying the platform.",
+    name: "Small",
+    price: "$9.99",
+    cadence: "/mo",
+    description: "2,000 credits a month for steady weekly study.",
+    note: "Billed monthly",
     features: [
-      "1 Deck",
-      "50 Flashcards",
-      "5 AI generations / month",
-      "1 PDF or Image upload / month",
-      "Basic Smart Review",
-      "Study Streaks",
+      "2,000 monthly credits",
+      "10 study plans",
+      "10 test prep tracks",
+      "Ask My Docs: 20 docs",
+      "20 uploads / month",
     ],
-    cta: "Sign up free",
-    href: "/sign-up",
+    cta: "Choose Small",
+    href: "/paywall",
   },
   {
-    name: "Student Pro",
+    name: "Best",
     badge: "Most Popular",
-    price: "$4.99",
-    cadence: "/month",
-    description: "For students who study regularly and want unlimited access.",
+    price: "$5.83",
+    cadence: "/mo",
+    description: "4,000 credits a month at the best per-credit price.",
+    note: "Billed $69.99/year",
+    savings: "Save 42%",
     features: [
-      "Unlimited Decks",
-      "Unlimited Flashcards",
-      "High AI generation allowance",
-      "PDF & Image uploads",
-      "Smart Review",
-      "Study Streaks",
+      "4,000 monthly credits",
+      "20 study plans",
+      "20 test prep tracks",
+      "Ask My Docs: 50 docs",
+      "50 uploads / month",
     ],
-    cta: "Upgrade to Pro",
+    cta: "Choose Best",
     href: "/paywall",
     highlighted: true,
   },
   {
-    name: "Pro Annual",
-    badge: "Best Value",
-    price: "$39.99",
-    cadence: "/year",
-    description: "The best plan for students who want the full year covered.",
-    note: "Approx. $3.33/month",
-    savings: "Save 33% annually",
+    name: "Unlimited",
+    price: "$23",
+    cadence: "/mo",
+    description: "No caps on credits, uploads, plans, or test prep.",
+    note: "Billed monthly",
     features: [
-      "Everything in Student Pro",
-      "Priority features",
-      "Priority access to new features",
+      "Unlimited credits",
+      "Unlimited study plans",
+      "Unlimited test prep tracks",
+      "Unlimited Ask My Docs",
+      "Unlimited uploads",
+      "Priority support",
     ],
-    cta: "Get Annual Plan",
+    cta: "Choose Unlimited",
     href: "/paywall",
   },
 ];
@@ -725,7 +724,8 @@ export default function LandingPage() {
 
           {/* testimonials marquee */}
           <div
-            className="relative mt-12 overflow-hidden"
+            id="testimonials"
+            className="relative mt-12 overflow-hidden scroll-mt-16"
             style={{
               WebkitMaskImage: "linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent)",
               maskImage: "linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent)",
@@ -927,7 +927,7 @@ export default function LandingPage() {
           </div>
 
           {/* FAQ */}
-          <div className="mt-24 text-center sm:mt-28 lg:mt-32">
+          <div id="faq" className="mt-24 scroll-mt-16 text-center sm:mt-28 lg:mt-32">
             <h2 className="text-3xl font-black tracking-[-0.02em] sm:text-4xl lg:text-[44px]">
               Frequently asked questions
             </h2>
@@ -1283,44 +1283,51 @@ export default function LandingPage() {
             </form>
           </div>
 
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/40">Product</p>
-            <ul className="mt-4 flex flex-col gap-3">
-              {productLinks.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="text-sm font-bold text-white/72 transition hover:text-[#FACC15]">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/40">Study</p>
-            <ul className="mt-4 flex flex-col gap-3">
-              {studyLinks.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="text-sm font-bold text-white/72 transition hover:text-[#FACC15]">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/40">Company</p>
-            <ul className="mt-4 flex flex-col gap-3">
-              {companyLinks.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="text-sm font-bold text-white/72 transition hover:text-[#FACC15]">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {[
+            { title: "Sections", links: sectionsLinks },
+            { title: "Our socials", links: socialsLinks },
+            { title: "Legal", links: legalLinks },
+          ].map((group) => (
+            <div key={group.title}>
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/40">
+                {group.title}
+              </p>
+              <ul className="mt-4 flex flex-col gap-3">
+                {group.links.map((link) =>
+                  link.external ? (
+                    <li key={link.label}>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="text-sm font-bold text-white/72 transition hover:text-[#FACC15]"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ) : link.href.startsWith("#") ? (
+                    <li key={link.label}>
+                      <a
+                        href={link.href}
+                        className="text-sm font-bold text-white/72 transition hover:text-[#FACC15]"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ) : (
+                    <li key={link.label}>
+                      <Link
+                        href={link.href}
+                        className="text-sm font-bold text-white/72 transition hover:text-[#FACC15]"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ),
+                )}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <div className="mx-auto mt-10 flex max-w-[1200px] flex-wrap items-center justify-between gap-4 border-t border-white/12 pt-6 sm:mt-13">
@@ -1328,29 +1335,6 @@ export default function LandingPage() {
           <div className="flex flex-wrap gap-5">
             <Link href="/privacy" className="text-[12.5px] font-bold text-white/60 transition hover:text-[#FACC15]">Privacy</Link>
             <Link href="/terms" className="text-[12.5px] font-bold text-white/60 transition hover:text-[#FACC15]">Terms</Link>
-            <Link href="/pricing" className="text-[12.5px] font-bold text-white/60 transition hover:text-[#FACC15]">Restore purchase</Link>
-          </div>
-          <div className="flex gap-2.5">
-            <a href="#" aria-label="Instagram" className="grid h-[38px] w-[38px] place-items-center rounded-xl bg-white/8 text-white transition hover:bg-[#FACC15] hover:text-[#1E1B4B]">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="4" y="4" width="16" height="16" rx="5" />
-                <circle cx="12" cy="12" r="3.5" />
-                <circle cx="17" cy="7" r="1" fill="currentColor" stroke="none" />
-              </svg>
-            </a>
-            <a href="#" aria-label="TikTok" className="grid h-[38px] w-[38px] place-items-center rounded-xl bg-white/8 text-white transition hover:bg-[#FACC15] hover:text-[#1E1B4B]">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M9 18V6l10-2v12" />
-                <circle cx="6" cy="18" r="3" />
-                <circle cx="16" cy="16" r="3" />
-              </svg>
-            </a>
-            <a href="#" aria-label="YouTube" className="grid h-[38px] w-[38px] place-items-center rounded-xl bg-white/8 text-white transition hover:bg-[#FACC15] hover:text-[#1E1B4B]">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="3" y="6" width="18" height="12" rx="4" />
-                <path d="M10 9.5v5l4.5-2.5-4.5-2.5Z" fill="currentColor" stroke="none" />
-              </svg>
-            </a>
           </div>
         </div>
       </footer>

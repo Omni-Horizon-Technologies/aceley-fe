@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
 import { AppLayout } from "@/app/components/app-layout";
 import { PricingPlanCta } from "@/app/components/public-auth-actions";
-import {
-  Icon,
-  cn,
-} from "@/app/components/ui";
+import { Icon, cn } from "@/app/components/ui";
 
 export const metadata: Metadata = {
   title: "Pricing | Aceley",
   description:
-    "Simple student-friendly pricing for Aceley flashcards, AI generation, and smart study tools.",
+    "Pick the Aceley plan that fits your study load. Credits, study plans, test prep, and uploads — priced for students.",
 };
 
 type PricingPlan = {
@@ -18,7 +15,7 @@ type PricingPlan = {
   price: string;
   cadence: string;
   description: string;
-  note?: string;
+  billing: string;
   savings?: string;
   features: string[];
   cta: string;
@@ -28,55 +25,109 @@ type PricingPlan = {
 
 const plans: PricingPlan[] = [
   {
-    name: "Free",
-    price: "$0",
-    cadence: "/month",
-    description: "Perfect for students trying the platform.",
+    name: "Small",
+    price: "$9.99",
+    cadence: "/mo",
+    description: "2,000 credits a month for steady weekly study.",
+    billing: "Billed monthly",
     features: [
-      "1 Deck",
-      "50 Flashcards",
-      "5 AI generations / month",
-      "1 PDF or Image upload / month",
-      "Basic Smart Review",
-      "Study Streaks",
+      "2,000 monthly credits",
+      "10 study plans",
+      "10 test prep tracks",
+      "Ask My Docs: 20 docs",
+      "20 uploads / month",
     ],
-    cta: "Sign up free",
-    href: "/sign-up",
+    cta: "Choose Small",
+    href: "/paywall",
   },
   {
-    name: "Student Pro",
+    name: "Best",
     badge: "Most Popular",
-    price: "$4.99",
-    cadence: "/month",
-    description: "For students who study regularly and want unlimited access.",
+    price: "$5.83",
+    cadence: "/mo",
+    description: "4,000 credits a month at the best per-credit price.",
+    billing: "Billed $69.99/year",
+    savings: "Save 42%",
     features: [
-      "Unlimited Decks",
-      "Unlimited Flashcards",
-      "High AI generation allowance",
-      "PDF & Image uploads",
-      "Smart Review",
-      "Study Streaks",
+      "4,000 monthly credits",
+      "20 study plans",
+      "20 test prep tracks",
+      "Ask My Docs: 50 docs",
+      "50 uploads / month",
     ],
-    cta: "Upgrade to Pro",
+    cta: "Choose Best",
     href: "/paywall",
     highlighted: true,
   },
   {
-    name: "Student Pro Annual",
-    badge: "Best Value",
-    price: "$39.99",
-    cadence: "/year",
-    description: "The best plan for students who want the full year covered.",
-    note: "Equivalent to approx. $3.33/month",
-    savings: "Save 33% annually",
+    name: "Unlimited",
+    price: "$23",
+    cadence: "/mo",
+    description: "No caps on credits, uploads, plans, or test prep.",
+    billing: "Billed monthly",
     features: [
-      "Everything in Student Pro",
-      "Priority features",
-      "Priority access to new features",
-      "Best value plan",
+      "Unlimited credits",
+      "Unlimited study plans",
+      "Unlimited test prep tracks",
+      "Unlimited Ask My Docs",
+      "Unlimited uploads",
+      "Priority support",
     ],
-    cta: "Get Annual Plan",
+    cta: "Choose Unlimited",
     href: "/paywall",
+  },
+];
+
+type ComparisonRow = {
+  feature: string;
+  free: string;
+  small: string;
+  best: string;
+  unlimited: string;
+};
+
+const comparison: ComparisonRow[] = [
+  {
+    feature: "Monthly credits",
+    free: "10",
+    small: "2,000",
+    best: "4,000",
+    unlimited: "∞",
+  },
+  {
+    feature: "Study plans",
+    free: "1",
+    small: "10",
+    best: "20",
+    unlimited: "Unlimited",
+  },
+  {
+    feature: "Test prep tracks",
+    free: "1",
+    small: "10",
+    best: "20",
+    unlimited: "Unlimited",
+  },
+  {
+    feature: "Ask My Docs library",
+    free: "3 docs",
+    small: "20 docs",
+    best: "50 docs",
+    unlimited: "Unlimited",
+  },
+  {
+    feature: "Uploads",
+    free: "3 / mo",
+    small: "20 / mo",
+    best: "50 / mo",
+    unlimited: "Unlimited",
+  },
+  {
+    feature: "Priority support",
+    free: "—",
+    small: "—",
+    best: "—",
+    unlimited: "✓",
   },
 ];
 
@@ -133,7 +184,9 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
 
       <div className="mt-6">
         <div className="flex items-end gap-1">
-          <span className="text-5xl font-black tracking-tight">{plan.price}</span>
+          <span className="text-5xl font-black tracking-tight">
+            {plan.price}
+          </span>
           <span
             className={cn(
               "pb-2 text-sm font-bold",
@@ -143,16 +196,14 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
             {plan.cadence}
           </span>
         </div>
-        {plan.note ? (
-          <p
-            className={cn(
-              "mt-3 text-sm font-semibold",
-              plan.highlighted ? "text-white/80" : "text-slate-600",
-            )}
-          >
-            {plan.note}
-          </p>
-        ) : null}
+        <p
+          className={cn(
+            "mt-3 text-sm font-semibold",
+            plan.highlighted ? "text-white/80" : "text-slate-600",
+          )}
+        >
+          {plan.billing}
+        </p>
         {plan.savings ? (
           <p className="mt-2 inline-flex rounded-lg bg-[#FACC15]/10 px-3 py-1 text-sm font-black text-[#CA8A04]">
             {plan.savings}
@@ -161,7 +212,11 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
       </div>
 
       <div className="mt-7">
-        <PricingPlanCta cta={plan.cta} highlighted={plan.highlighted} href={plan.href} />
+        <PricingPlanCta
+          cta={plan.cta}
+          highlighted={plan.highlighted}
+          href={plan.href}
+        />
       </div>
 
       <ul className="mt-7 flex flex-1 flex-col gap-3">
@@ -177,7 +232,9 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
             >
               <Icon name="check" className="h-3.5 w-3.5" />
             </span>
-            <span className={plan.highlighted ? "text-white/86" : "text-slate-700"}>
+            <span
+              className={plan.highlighted ? "text-white/86" : "text-slate-700"}
+            >
               {feature}
             </span>
           </li>
@@ -195,11 +252,12 @@ export default function PricingPage() {
           Pricing
         </p>
         <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight text-[#1E1B4B] sm:text-5xl">
-          Simple Pricing for Serious Students
+          Simple pricing for serious students
         </h1>
         <p className="mt-5 text-lg leading-8 text-slate-600">
-          Start free and upgrade only when you need unlimited flashcards, AI
-          generation, and smarter study tools.
+          Credits power everything — AI tutor answers, generated flashcards,
+          quizzes, and scans. Pick a tier below or start free with 10 credits a
+          month.
         </p>
       </div>
 
@@ -225,6 +283,68 @@ export default function PricingPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="mt-16">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="inline-flex rounded-lg bg-[#312E81]/10 px-3 py-2 text-sm font-black uppercase tracking-[0.16em] text-[#312E81]">
+            Compare plans
+          </p>
+          <h2 className="mt-5 text-3xl font-black tracking-tight text-[#1E1B4B] sm:text-4xl">
+            Everything, side by side
+          </h2>
+          <p className="mt-3 text-base leading-7 text-slate-600">
+            Here&rsquo;s what Free, Small, Best, and Unlimited include every
+            month.
+          </p>
+        </div>
+
+        <div className="mt-8 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left">
+              <thead>
+                <tr className="bg-[#F8FAFC] text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+                  <th className="px-5 py-4">Feature</th>
+                  <th className="px-5 py-4 text-center">Free</th>
+                  <th className="px-5 py-4 text-center">Small</th>
+                  <th className="bg-[#FEF3C7] px-5 py-4 text-center text-[#1E1B4B]">
+                    Best
+                  </th>
+                  <th className="px-5 py-4 text-center">Unlimited</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {comparison.map((row) => (
+                  <tr key={row.feature} className="text-[#1E1B4B]">
+                    <th
+                      scope="row"
+                      className="px-5 py-4 text-left font-black text-slate-700"
+                    >
+                      {row.feature}
+                    </th>
+                    <td className="px-5 py-4 text-center font-semibold text-slate-600">
+                      {row.free}
+                    </td>
+                    <td className="px-5 py-4 text-center font-semibold text-slate-700">
+                      {row.small}
+                    </td>
+                    <td className="bg-[#FEF3C7]/40 px-5 py-4 text-center font-black text-[#1E1B4B]">
+                      {row.best}
+                    </td>
+                    <td className="px-5 py-4 text-center font-semibold text-slate-700">
+                      {row.unlimited}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <p className="mt-5 text-center text-xs font-semibold text-slate-500">
+          Credits refresh at the start of each billing period. Unused credits
+          don&rsquo;t roll over.
+        </p>
       </div>
     </AppLayout>
   );

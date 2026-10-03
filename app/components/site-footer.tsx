@@ -1,23 +1,35 @@
 import Link from "next/link";
-import { PublicAuthFooterLinks } from "@/app/components/public-auth-actions";
 import { BrandMark, Icon } from "@/app/components/ui";
 
-const footerGroups = [
-  {
-    title: "Product",
-    links: [
-      { href: "/dashboard", label: "Dashboard" },
-      { href: "/create", label: "Create Deck" },
-      { href: "/study", label: "Study Demo" },
-    ],
-  },
-  {
-    title: "Plans",
-    links: [
-      { href: "/pricing", label: "Pricing" },
-      { href: "/paywall", label: "Aceley Pro" },
-    ],
-  },
+type FooterLink = {
+  href: string;
+  label: string;
+  external?: boolean;
+};
+
+const sectionsLinks: FooterLink[] = [
+  { href: "/#tools", label: "How it works" },
+  { href: "/#testimonials", label: "Testimonials" },
+  { href: "/#faq", label: "FAQ" },
+  { href: "/download", label: "Download" },
+];
+
+const socialsLinks: FooterLink[] = [
+  { href: "https://instagram.com/", label: "Instagram", external: true },
+  { href: "https://discord.com/", label: "Discord", external: true },
+  { href: "https://tiktok.com/", label: "TikTok", external: true },
+  { href: "/articles", label: "Articles" },
+];
+
+const legalLinks: FooterLink[] = [
+  { href: "/privacy", label: "Privacy policy" },
+  { href: "/terms", label: "Terms" },
+];
+
+const footerGroups: Array<{ title: string; links: FooterLink[] }> = [
+  { title: "Sections", links: sectionsLinks },
+  { title: "Our socials", links: socialsLinks },
+  { title: "Legal", links: legalLinks },
 ];
 
 const footerTrust = [
@@ -25,6 +37,30 @@ const footerTrust = [
   "Cancel anytime",
   "Student-friendly pricing",
 ];
+
+function FooterLinkItem({ link }: { link: FooterLink }) {
+  const className =
+    "text-sm font-semibold text-slate-600 transition hover:text-[#CA8A04]";
+
+  if (link.external) {
+    return (
+      <a
+        className={className}
+        href={link.href}
+        rel="noreferrer noopener"
+        target="_blank"
+      >
+        {link.label}
+      </a>
+    );
+  }
+
+  return (
+    <Link className={className} href={link.href}>
+      {link.label}
+    </Link>
+  );
+}
 
 export function SiteFooter() {
   return (
@@ -62,23 +98,12 @@ export function SiteFooter() {
                 <ul className="mt-4 space-y-3">
                   {group.links.map((link) => (
                     <li key={`${group.title}-${link.label}`}>
-                      <Link
-                        className="text-sm font-semibold text-slate-600 transition hover:text-[#CA8A04]"
-                        href={link.href}
-                      >
-                        {link.label}
-                      </Link>
+                      <FooterLinkItem link={link} />
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
-            <div>
-              <h2 className="text-sm font-black text-[#1E1B4B]">Account</h2>
-              <ul className="mt-4 space-y-3">
-                <PublicAuthFooterLinks linkClassName="text-sm font-semibold text-slate-600 transition hover:text-[#CA8A04]" />
-              </ul>
-            </div>
           </nav>
         </div>
 
