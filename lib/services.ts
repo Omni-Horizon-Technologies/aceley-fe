@@ -1,28 +1,8 @@
-/**
- * Backend API service functions.
- * Each function calls the real backend and returns typed data.
- */
-import { apiFetch } from "@/lib/api";
+import { apiClient } from "@/services/apiClient";
+
+const ROOT = "/api/v1";
 
 // ── Tutor ──────────────────────────────────────────────
-
-export async function createConversation(subject?: string) {
-  const res = await apiFetch("/tutor/conversations", {
-    method: "POST",
-    body: JSON.stringify({ subject, title: subject }),
-  });
-  if (!res.ok) throw new Error("Failed to create conversation");
-  return res.json();
-}
-
-export async function sendTutorMessage(conversationId: string, content: string) {
-  const res = await apiFetch(`/tutor/conversations/${conversationId}/messages`, {
-    method: "POST",
-    body: JSON.stringify({ content }),
-  });
-  if (!res.ok) throw new Error("Failed to send message");
-  return res.json();
-}
 
 export type BackendConversation = {
   id: string;
@@ -41,99 +21,90 @@ export type BackendMessage = {
   created_at: string;
 };
 
-export async function fetchConversations(): Promise<BackendConversation[]> {
-  const res = await apiFetch("/tutor/conversations");
-  if (!res.ok) throw new Error("Failed to fetch conversations");
-  return res.json();
+export function createConversation(subject?: string) {
+  return apiClient.post<BackendConversation>(`${ROOT}/tutor/conversations`, {
+    subject,
+    title: subject,
+  });
 }
 
-export async function fetchConversation(conversationId: string): Promise<BackendConversation> {
-  const res = await apiFetch(`/tutor/conversations/${conversationId}`);
-  if (!res.ok) throw new Error("Failed to fetch conversation");
-  return res.json();
+export function sendTutorMessage(conversationId: string, content: string) {
+  return apiClient.post<BackendMessage>(
+    `${ROOT}/tutor/conversations/${conversationId}/messages`,
+    { content },
+  );
 }
 
-export async function fetchMessages(conversationId: string): Promise<BackendMessage[]> {
-  const res = await apiFetch(`/tutor/conversations/${conversationId}/messages`);
-  if (!res.ok) throw new Error("Failed to fetch messages");
-  return res.json();
+export function fetchConversations(): Promise<BackendConversation[]> {
+  return apiClient.get<BackendConversation[]>(`${ROOT}/tutor/conversations`);
+}
+
+export function fetchConversation(conversationId: string): Promise<BackendConversation> {
+  return apiClient.get<BackendConversation>(
+    `${ROOT}/tutor/conversations/${conversationId}`,
+  );
+}
+
+export function fetchMessages(conversationId: string): Promise<BackendMessage[]> {
+  return apiClient.get<BackendMessage[]>(
+    `${ROOT}/tutor/conversations/${conversationId}/messages`,
+  );
 }
 
 // ── Ask ────────────────────────────────────────────────
 
-export async function askQuestion(question: string, subject?: string) {
-  const res = await apiFetch("/learning/ask", {
-    method: "POST",
-    body: JSON.stringify({ question, subject }),
-  });
-  if (!res.ok) throw new Error("Failed to ask question");
-  return res.json() as Promise<{ answer: string; sources: string[] }>;
+export function askQuestion(question: string, subject?: string) {
+  return apiClient.post<{ answer: string; sources: string[] }>(
+    `${ROOT}/learning/ask`,
+    { question, subject },
+  );
 }
 
 // ── Explain ────────────────────────────────────────────
 
-export async function explainTopic(topic: string, style: string, context?: string) {
-  const res = await apiFetch("/learning/explain", {
-    method: "POST",
-    body: JSON.stringify({ topic, style, context }),
-  });
-  if (!res.ok) throw new Error("Failed to explain");
-  return res.json() as Promise<{ explanation: string; style: string }>;
+export function explainTopic(topic: string, style: string, context?: string) {
+  return apiClient.post<{ explanation: string; style: string }>(
+    `${ROOT}/learning/explain`,
+    { topic, style, context },
+  );
 }
 
 // ── Quiz ───────────────────────────────────────────────
 
-export async function generateQuiz(topic: string, numQuestions = 5) {
-  const res = await apiFetch("/quizzes", {
-    method: "POST",
-    body: JSON.stringify({ topic, num_questions: numQuestions }),
-  });
-  if (!res.ok) throw new Error("Failed to generate quiz");
-  return res.json() as Promise<{
+export function generateQuiz(topic: string, numQuestions = 5) {
+  return apiClient.post<{
     id: string;
     topic: string;
     questions: { question: string; options: string[]; correct_index: number; explanation: string }[];
-  }>;
+  }>(`${ROOT}/quizzes`, { topic, num_questions: numQuestions });
 }
 
-export async function fetchQuiz(quizId: string) {
-  const res = await apiFetch(`/quizzes/${encodeURIComponent(quizId)}`);
-  if (!res.ok) throw new Error("Failed to load quiz");
-  return res.json() as Promise<{
+export function fetchQuiz(quizId: string) {
+  return apiClient.get<{
     id: string;
     topic?: string;
     title?: string;
     questions: { question: string; options: string[]; correct_index: number; explanation: string }[];
-  }>;
+  }>(`${ROOT}/quizzes/${encodeURIComponent(quizId)}`);
 }
 
-export async function submitQuiz(quizId: string, answers: number[]) {
-  const res = await apiFetch(`/learning/quizzes/${quizId}/submit`, {
-    method: "POST",
-    body: JSON.stringify({ answers }),
-  });
-  if (!res.ok) throw new Error("Failed to submit quiz");
-  return res.json() as Promise<{
+export function submitQuiz(quizId: string, answers: number[]) {
+  return apiClient.post<{
     quiz_id: string;
     score: number;
     total: number;
     results: { question: string; user_answer: number; correct_answer: number; is_correct: boolean; explanation: string }[];
-  }>;
+  }>(`${ROOT}/learning/quizzes/${quizId}/submit`, { answers });
 }
 
 // ── Flashcards ─────────────────────────────────────────
 
-export async function generateFlashcards(topic: string, numCards = 10) {
-  const res = await apiFetch("/learning/flashcards", {
-    method: "POST",
-    body: JSON.stringify({ topic, num_cards: numCards }),
-  });
-  if (!res.ok) throw new Error("Failed to generate flashcards");
-  return res.json() as Promise<{
+export function generateFlashcards(topic: string, numCards = 10) {
+  return apiClient.post<{
     id: string;
     topic: string;
     cards: { front: string; back: string }[];
-  }>;
+  }>(`${ROOT}/learning/flashcards`, { topic, num_cards: numCards });
 }
 
 // ── Study Plan ─────────────────────────────────────────
@@ -156,7 +127,7 @@ export type BackendPlan = {
   updated_at: string;
 };
 
-export async function createPlan(data: {
+export function createPlan(data: {
   subject: string;
   topic: string;
   goal?: string;
@@ -165,48 +136,36 @@ export async function createPlan(data: {
   confidence?: string;
   hours_per_day?: string;
 }): Promise<BackendPlan> {
-  const res = await apiFetch("/learning/plans", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to generate plan");
-  return res.json();
+  return apiClient.post<BackendPlan>(`${ROOT}/learning/plans`, data);
 }
 
-export async function fetchPlans(): Promise<BackendPlan[]> {
-  const res = await apiFetch("/learning/plans");
-  if (!res.ok) throw new Error("Failed to fetch plans");
-  return res.json();
+export function fetchPlans(): Promise<BackendPlan[]> {
+  return apiClient.get<BackendPlan[]>(`${ROOT}/learning/plans`);
 }
 
-export async function fetchPlan(planId: string): Promise<BackendPlan> {
-  const res = await apiFetch(`/learning/plans/${planId}`);
-  if (!res.ok) throw new Error("Failed to fetch plan");
-  return res.json();
+export function fetchPlan(planId: string): Promise<BackendPlan> {
+  return apiClient.get<BackendPlan>(`${ROOT}/learning/plans/${planId}`);
 }
 
-export async function completePlanDay(planId: string, day: number, completed = true): Promise<BackendPlan> {
-  const res = await apiFetch(`/learning/plans/${planId}/day`, {
-    method: "PATCH",
-    body: JSON.stringify({ day, completed }),
-  });
-  if (!res.ok) throw new Error("Failed to update plan day");
-  return res.json();
+export function completePlanDay(
+  planId: string,
+  day: number,
+  completed = true,
+): Promise<BackendPlan> {
+  return apiClient.patch<BackendPlan>(
+    `${ROOT}/learning/plans/${planId}/day`,
+    { day, completed },
+  );
 }
 
 // ── Study Sessions ────────────────────────────────────
 
-export async function recordStudySession(data: {
+export function recordStudySession(data: {
   minutes: number;
   preset?: string;
   audio?: string;
 }) {
-  const res = await apiFetch("/learning/sessions", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to record session");
-  return res.json();
+  return apiClient.post<unknown>(`${ROOT}/learning/sessions`, data);
 }
 
 // ── Community / Spaces ────────────────────────────────
@@ -221,23 +180,16 @@ export type BackendSpace = {
   created_at: string;
 };
 
-export async function fetchSpaces(): Promise<BackendSpace[]> {
-  const res = await apiFetch("/community/spaces");
-  if (!res.ok) throw new Error("Failed to fetch spaces");
-  return res.json();
+export function fetchSpaces(): Promise<BackendSpace[]> {
+  return apiClient.get<BackendSpace[]>(`${ROOT}/community/spaces`);
 }
 
-export async function createSpace(data: {
+export function createSpace(data: {
   name: string;
   description?: string;
   space_type?: string;
 }): Promise<BackendSpace> {
-  const res = await apiFetch("/community/spaces", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to create space");
-  return res.json();
+  return apiClient.post<BackendSpace>(`${ROOT}/community/spaces`, data);
 }
 
 // ── Progress ──────────────────────────────────────────
@@ -251,10 +203,8 @@ export type BackendProgress = {
   streak_days: number;
 };
 
-export async function fetchProgress(): Promise<BackendProgress> {
-  const res = await apiFetch("/learning/progress");
-  if (!res.ok) throw new Error("Failed to fetch progress");
-  return res.json();
+export function fetchProgress(): Promise<BackendProgress> {
+  return apiClient.get<BackendProgress>(`${ROOT}/learning/progress`);
 }
 
 // ── Intake / Uploads ─────────────────────────────────
@@ -285,51 +235,42 @@ export type BackendStudyPack = {
   created_at: string;
 };
 
-export async function uploadFile(file: File): Promise<BackendUpload> {
+export function uploadFile(file: File): Promise<BackendUpload> {
   const formData = new FormData();
   formData.append("file", file);
-  const res = await apiFetch("/intake/uploads", {
-    method: "POST",
-    body: formData,
+  return apiClient.post<BackendUpload>(`${ROOT}/intake/uploads`, formData);
+}
+
+export function listUploads(): Promise<BackendUpload[]> {
+  return apiClient.get<BackendUpload[]>(`${ROOT}/intake/uploads`);
+}
+
+export function scanUpload(
+  uploadId: string,
+  question?: string,
+): Promise<BackendScanResult> {
+  return apiClient.post<BackendScanResult>(`${ROOT}/intake/scan`, {
+    upload_id: uploadId,
+    question,
   });
-  if (!res.ok) throw new Error("Failed to upload file");
-  return res.json();
 }
 
-export async function listUploads(): Promise<BackendUpload[]> {
-  const res = await apiFetch("/intake/uploads");
-  if (!res.ok) throw new Error("Failed to list uploads");
-  return res.json();
-}
-
-export async function scanUpload(uploadId: string, question?: string): Promise<BackendScanResult> {
-  const res = await apiFetch("/intake/scan", {
-    method: "POST",
-    body: JSON.stringify({ upload_id: uploadId, question }),
+export function generateStudyPack(
+  uploadId: string,
+  title?: string,
+): Promise<BackendStudyPack> {
+  return apiClient.post<BackendStudyPack>(`${ROOT}/intake/study-pack`, {
+    upload_id: uploadId,
+    title,
   });
-  if (!res.ok) throw new Error("Failed to scan document");
-  return res.json();
 }
 
-export async function generateStudyPack(uploadId: string, title?: string): Promise<BackendStudyPack> {
-  const res = await apiFetch("/intake/study-pack", {
-    method: "POST",
-    body: JSON.stringify({ upload_id: uploadId, title }),
-  });
-  if (!res.ok) throw new Error("Failed to generate study pack");
-  return res.json();
-}
-
-export async function fetchStudyPack(packId: string): Promise<BackendStudyPack> {
-  const res = await apiFetch(`/intake/study-pack/${packId}`);
-  if (!res.ok) throw new Error("Failed to fetch study pack");
-  return res.json();
+export function fetchStudyPack(packId: string): Promise<BackendStudyPack> {
+  return apiClient.get<BackendStudyPack>(`${ROOT}/intake/study-pack/${packId}`);
 }
 
 // ── Profile ────────────────────────────────────────────
 
-export async function getProfile() {
-  const res = await apiFetch("/identity/profile");
-  if (!res.ok) throw new Error("Failed to get profile");
-  return res.json();
+export function getProfile() {
+  return apiClient.get<unknown>(`${ROOT}/identity/profile`);
 }

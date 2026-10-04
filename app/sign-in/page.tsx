@@ -6,7 +6,7 @@ import { AceleyAPlusIcon } from "@/app/components/icons/icons";
 import { LottieMascot } from "@/app/components/lottie-mascot";
 import { Icon, PrimaryButton } from "@/app/components/ui";
 import { useAppState } from "@/lib/state";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/services/hooks/useAuth";
 
 const SIGN_IN_PARTICLES: Array<{ left: number; dur: number; delay: number; color: string }> = [
   { left: 8, dur: 18, delay: 0, color: "rgba(250,204,21,0.5)" },

@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api";
+import { apiClient } from "@/services/apiClient";
 
 export type HomeDashboard = {
   active_plan: null | { id: string; title?: string | null; subject?: string | null; exam_name?: string | null; exam_date?: string | null; total_days: number; completed_days: number };
@@ -8,8 +8,6 @@ export type HomeDashboard = {
   streak_days: number;
 };
 
-export async function fetchHomeDashboard(): Promise<HomeDashboard> {
-  const response = await apiFetch("/home/dashboard");
-  if (!response.ok) throw new Error("Failed to load dashboard");
-  return response.json();
+export function fetchHomeDashboard(): Promise<HomeDashboard> {
+  return apiClient.get<HomeDashboard>("/api/v1/home/dashboard");
 }

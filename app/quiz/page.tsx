@@ -4,12 +4,18 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/app/components/app-layout";
 import { QuizPage } from "@/app/components/aceley-pages";
+import { ReturnToPlanChip } from "@/app/components/return-to-plan-chip";
 
 function QuizPageWithParams() {
   const searchParams = useSearchParams();
   const topic = searchParams.get("subject") || searchParams.get("topic") || undefined;
   const quizId = searchParams.get("quizId") || undefined;
-  return <QuizPage quizId={quizId} topic={topic} />;
+  return (
+    <>
+      <ReturnToPlanChip />
+      <QuizPage quizId={quizId} topic={topic} />
+    </>
+  );
 }
 
 export default function Page() {

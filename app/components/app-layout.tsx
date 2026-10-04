@@ -14,19 +14,13 @@ import { useAuthStore } from "@/services/context/auth";
 type NavId =
   | "home"
   | "dashboard"
-  | "coach"
   | "plans"
-  | "spaces"
-  | "progress"
-  | "focus"
+  | "history"
   | "create"
   | "ask"
   | "quiz"
   | "flashcards"
   | "tutor"
-  | "explain"
-  | "scan"
-  | "study-pack"
   | "test-prep"
   | "profile"
   | "pricing"
@@ -55,27 +49,26 @@ const navGroups: NavGroup[] = [
     label: "Main",
     items: [
       { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: "dashboard" },
-      { id: "coach", label: "Coach", href: "/coach", icon: "brain" },
       { id: "plans", label: "Plans", href: "/plans", icon: "calendar" },
-      { id: "spaces", label: "Spaces", href: "/spaces", icon: "spaces" },
-      { id: "progress", label: "Progress", href: "/progress", icon: "progress" },
-      { id: "focus", label: "Focus", href: "/focus", icon: "target" },
+      { id: "history", label: "History", href: "/history", icon: "clock" },
     ],
   },
-  {
-    label: "Study Tools",
-    items: [
-      { id: "create", label: "Create", href: "/create", icon: "create" },
-      { id: "ask", label: "Ask", href: "/ask", icon: "chat" },
-      { id: "quiz", label: "Quiz", href: "/quiz", icon: "bolt" },
-      { id: "flashcards", label: "Flashcards", href: "/flashcards", icon: "book" },
-      { id: "tutor", label: "Tutor", href: "/tutor", icon: "pencil" },
-      { id: "explain", label: "Explain", href: "/explain", icon: "search" },
-      { id: "scan", label: "Scan", href: "/scan", icon: "scan" },
-      { id: "study-pack", label: "Study Pack", href: "/study-pack", icon: "bookmark" },
-      { id: "test-prep", label: "Test Prep", href: "/test-prep", icon: "medal" },
-    ],
-  },
+  // Study Tools — hidden from the sidebar until these surfaces are ready.
+  // Routes still exist and sub-route detection in `detectNavId` still works.
+  // {
+  //   label: "Study Tools",
+  //   items: [
+  //     { id: "create", label: "Create", href: "/create", icon: "create" },
+  //     { id: "ask", label: "Ask", href: "/ask", icon: "chat" },
+  //     { id: "quiz", label: "Quiz", href: "/quiz", icon: "bolt" },
+  //     { id: "flashcards", label: "Flashcards", href: "/flashcards", icon: "book" },
+  //     { id: "tutor", label: "Tutor", href: "/tutor", icon: "pencil" },
+  //     { id: "test-prep", label: "Test Prep", href: "/test-prep", icon: "medal" },
+  //     { id: "explain", label: "Explain", href: "/explain", icon: "search" },
+  //     { id: "scan", label: "Scan", href: "/scan", icon: "scan" },
+  //     { id: "study-pack", label: "Study Pack", href: "/study-pack", icon: "bookmark" },
+  //   ],
+  // },
   {
     label: "Account",
     items: [
@@ -91,9 +84,8 @@ const navGroups: NavGroup[] = [
 
 const mobileNavItems: NavItem[] = [
   { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: "dashboard" },
-  { id: "coach", label: "Coach", href: "/coach", icon: "brain" },
-  { id: "create", label: "Create", href: "/create", icon: "create" },
-  { id: "progress", label: "Progress", href: "/progress", icon: "progress" },
+  { id: "plans", label: "Plans", href: "/plans", icon: "calendar" },
+  { id: "history", label: "History", href: "/history", icon: "clock" },
   { id: "profile", label: "Profile", href: "/profile", icon: "profile" },
 ];
 
@@ -110,15 +102,12 @@ function detectNavId(pathname: string): NavId {
 
   // sub-route matching
   if (pathname.startsWith("/plan/") || pathname.startsWith("/plans/")) return "plans";
+  if (pathname.startsWith("/history/")) return "history";
   if (pathname.startsWith("/ask/")) return "ask";
   if (pathname.startsWith("/quiz/")) return "quiz";
   if (pathname.startsWith("/flashcards/")) return "flashcards";
   if (pathname.startsWith("/tutor/")) return "tutor";
-  if (pathname.startsWith("/explain/")) return "explain";
-  if (pathname.startsWith("/scan/")) return "scan";
-  if (pathname.startsWith("/study-pack/")) return "study-pack";
   if (pathname.startsWith("/test-prep/")) return "test-prep";
-  if (pathname.startsWith("/focus/")) return "focus";
   if (pathname.startsWith("/decks/")) return "decks";
   if (pathname.startsWith("/study")) return "study";
   if (pathname.startsWith("/paywall")) return "paywall";
@@ -129,8 +118,6 @@ function detectNavId(pathname: string): NavId {
 /* ------------------------------------------------------------------ */
 /*  Sidebar                                                            */
 /* ------------------------------------------------------------------ */
-
-const studyToolIds = new Set(navGroups.find((g) => g.label === "Study Tools")?.items.map((i) => i.id) ?? []);
 
 function Sidebar({ active }: { active: NavId }) {
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -247,13 +234,6 @@ function MobileNav({ active }: { active: NavId }) {
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/92 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           <BrandMark />
-          <Link
-            className="grid h-10 w-10 place-items-center rounded-lg bg-[#FACC15] text-[#1E1B4B] shadow-sm"
-            href="/paywall"
-            aria-label="Open Aceley Pro"
-          >
-            <Icon name="spark" className="h-4 w-4" />
-          </Link>
         </div>
       </header>
       <nav

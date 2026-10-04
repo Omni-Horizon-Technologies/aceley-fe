@@ -67,7 +67,8 @@ import {
   type Plan,
   type ThemePreference,
 } from "@/lib/state";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/services/hooks/useAuth";
+import { getProfile } from "@/services/modules/auth";
 import { HydrationGate } from "@/app/components/hydration-gate";
 import { completeOnboarding as completeOnboardingApi, patchProfile } from "@/services/modules/auth";
 import {
@@ -2758,24 +2759,25 @@ export function SpacesPage() {
 export function ProfilePageClient() {
   const router = useRouter();
   const state = useAppState();
-  const { user, profile, isPremium, logout, refreshProfile } = useAuth();
+  const { user, profile, signOut: storeSignOut, updateProfile } = useAuth();
+  const isPremium = profile?.is_premium ?? false;
   const profileLine = [state.answers.country, state.answers.age, state.answers.level, state.answers.subject].filter(Boolean).join(" · ");
-  const displayName = profile?.display_name || state.answers.name || "Aceley Student";
+  const displayName = profile?.nickname || state.answers.name || "Aceley Student";
   const displayEmail = profile?.email || user?.email || "";
 
   useEffect(() => {
-    refreshProfile();
-  }, [refreshProfile]);
+    getProfile().then(updateProfile).catch(() => {});
+  }, [updateProfile]);
 
   function resetOnboarding() {
     state.resetOnboarding();
-    logout();
+    void storeSignOut();
     router.push("/sign-up");
   }
 
   function signOut() {
     state.resetOnboarding();
-    logout();
+    void storeSignOut();
     router.replace("/landing");
   }
 
